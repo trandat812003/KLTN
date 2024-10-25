@@ -2,7 +2,7 @@ import json
 import torch
 from typing import Dict
 from libs.dataset.my_dataset import MyDataset
-from libs.models.autotokenizer import get_tokenizer
+from libs.utils.get_tokenizer import get_tokenizer
 from libs.utils import InputFeatures
 
 
