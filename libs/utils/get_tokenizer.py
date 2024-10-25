@@ -1,4 +1,3 @@
-import os
 import yaml
 from transformers import AutoTokenizer
 
@@ -18,7 +17,3 @@ def get_tokenizer(data_name: str, knowledge_name: str):
             expanded_vocab += config['expanded_vocab'][knowledge_name]
         toker.add_tokens(expanded_vocab, special_tokens=True)
     return toker
-
-
-def get_model():
-    pass
