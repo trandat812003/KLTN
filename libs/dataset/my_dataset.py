@@ -1,3 +1,5 @@
+import os
+import pickle
 import torch
 from torch.utils.data import Dataset
 from typing import Dict, List
@@ -10,8 +12,8 @@ class MyDataset(Dataset):
         self._knowledge_name = knowledge_name
         self._max_input_length = 256
         self._max_decoder_input_length = 40
-        self._data: List
-        self._tokenizer: PreTrainedTokenizer
+        self._data: List = []
+        self._tokenizer: PreTrainedTokenizer = None
 
     def __len__(self) -> int:
         return len(self._data)
@@ -30,6 +32,20 @@ class MyDataset(Dataset):
     
     def collate(feature: InputFeatures):
         raise NotImplemented()
+    
+    def _load_dataset_from_pkl(self, file_name):
+        raise NotImplemented()
+
+    def _save_dataset_to_pkl(self, dataset, pkl_path):
+        raise NotImplemented()
+
+    def setup_and_load_dataset(self, dataset, path, mode):
+        if not os.path.exists(path):
+            dataset.setup(mode)
+            self._save_dataset_to_pkl(dataset, path)
+        else:
+            dataset = self._load_dataset_from_pkl(path)
+        return dataset
     
     def convert_inputs_to_feature(self, inputs: list) -> list:
         if len(inputs) == 0:
@@ -62,18 +78,29 @@ class MyDataset(Dataset):
             labels,
         )
     
-    def collate(self, feature: InputFeatures):
+    def collate(self, features: InputFeatures):
         pad = self._tokenizer.pad_token_id if self._tokenizer.pad_token_id is not None else self._tokenizer.eos_token_id
-        input_ids = torch.tensor(feature.input_ids, dtype=torch.long)
-        input_ids = torch.nn.utils.rnn.pad_sequence(input_ids, batch_first=True, padding_value=pad)
+        input_ids = torch.nn.utils.rnn.pad_sequence(
+            [torch.tensor(f.input_ids, dtype=torch.long) for f in features],
+            batch_first=True, 
+            padding_value=pad
+        )
+        attention_mask = torch.nn.utils.rnn.pad_sequence(
+            [torch.tensor([1.] * f.input_length, dtype=torch.float) for f in features],
+            batch_first=True, 
+            padding_value=0.
+        )
 
-        attention_mask = torch.tensor([1.] * feature.input_length, dtype=torch.float)
-        attention_mask = torch.nn.utils.rnn.pad_sequence(attention_mask, batch_first=True, padding_value=pad)
-
-        decoder_input_ids = torch.tensor(feature.decoder_input_ids, dtype=torch.long)
-        labels = torch.tensor(feature.labels, dtype=torch.long)
-        decoder_input_ids = torch.nn.utils.rnn.pad_sequence(decoder_input_ids, batch_first=True, padding_value=pad)
-        labels = torch.nn.utils.rnn.pad_sequence(labels, batch_first=True, padding_value=pad)  
+        decoder_input_ids = torch.nn.utils.rnn.pad_sequence(
+            [torch.tensor(f.decoder_input_ids, dtype=torch.long) for f in features],
+            batch_first=True, 
+            padding_value=pad
+        )
+        labels = torch.nn.utils.rnn.pad_sequence(
+            [torch.tensor(f.labels, dtype=torch.long) for f in features],
+            batch_first=True, 
+            padding_value=-100
+        )
 
         res = {
             'input_ids': input_ids,

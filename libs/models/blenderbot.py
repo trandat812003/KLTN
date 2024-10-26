@@ -2,8 +2,6 @@ from transformers.models.blenderbot_small import (BlenderbotSmallConfig, Blender
 from transformers.modeling_outputs import Seq2SeqLMOutput
 from transformers import PreTrainedTokenizer
 import torch
-import yaml
-from libs.models.utils.top_filtering import top_k_top_p_filtering
 import torch.nn.functional as F
 
 
@@ -33,7 +31,7 @@ class ModelBlenderbot(BlenderbotSmallForConditionalGeneration):
             labels[:, 0] = -100
         
         use_cache = use_cache if use_cache is not None else self.config.use_cache
-        if not self.training and not validation: # inference
+        if not self.training and not validation:
             use_cache = True
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 

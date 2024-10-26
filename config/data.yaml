@@ -1,5 +1,5 @@
 model_name: strat_blenderbot_small
-pretrained_model_path: ./Blenderbot_small-90M
+pretrained_model_path: ./.cache/Blenderbot_small-90M
 custom_config_path: null
 gradient_checkpointing: false
 

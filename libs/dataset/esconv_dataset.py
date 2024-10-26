@@ -1,4 +1,6 @@
 import json
+import os
+import pickle
 import torch
 from typing import Dict
 from libs.dataset.my_dataset import MyDataset
@@ -56,6 +58,7 @@ class ESConvDataset(MyDataset):
             
             if i > 0 and dialog[i]['speaker'] == 'sys':
                 res = {
+                    'dialog': dialog,
                     'context': context.copy(),
                     'knowledge': knowledge + heal,
                     'response': text,
@@ -68,9 +71,9 @@ class ESConvDataset(MyDataset):
 
         return inputs
     
-    def collate(self, feature: InputFeatures):
-        res = super().collate(feature)
-        strat_id = feature.labels[0] - len(self._tokenizer) + 8   
+    def collate(self, features: InputFeatures):
+        res = super().collate(features)
+        strat_id = torch.tensor([f.labels[0] for f in features], dtype=torch.long) - len(self._tokenizer) + 8 
 
         if self._knowledge_name == 'basic':
             strat_id += 5
@@ -87,3 +90,14 @@ class ESConvDataset(MyDataset):
 
     def _norm(self, text: str):
         return ' '.join(text.strip().split())
+    
+    def _load_dataset_from_pkl(self, file_name):
+        if os.path.exists(file_name):
+            with open(file_name, 'rb') as f:
+                dataset = pickle.load(f)
+            return dataset
+        return None
+
+    def _save_dataset_to_pkl(self, dataset, pkl_path):
+        with open(pkl_path, 'wb') as f:
+            pickle.dump(dataset, f)
