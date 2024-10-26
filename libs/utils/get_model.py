@@ -4,7 +4,7 @@ import torch
 from libs.models.blenderbot import ModelBlenderbot
 
 
-def get_model(data_name: str, knowledge_name: str, tokenizer: AutoTokenizer, checkpoint: str):
+def get_model(data_name: str, knowledge_name: str, tokenizer: AutoTokenizer, checkpoint: str=None):
     with open('./config/blenderbot.yaml', 'r', encoding='utf-8') as f:
         config = yaml.safe_load(f)
 
