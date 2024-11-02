@@ -1,19 +1,14 @@
-import os
 from lightning import Trainer
-from dotenv import load_dotenv
-
-from libs.dataset import MyDataModule
-from modules.mymodule import MyModule
-
-
-load_dotenv('./config/.env')
+from modules.my_module import MyModule
+from modules.my_datamodule import MyDataModule
+from libs.config import Config
+from libs.utils.get_tokenizer import get_tokenizer
 
 
-datamodule = MyDataModule(data_dir=os.getenv('DATA_DIR'))
+datamodule = MyDataModule(tokenizer=get_tokenizer())
 
 model = MyModule()
 
 
-trainer = Trainer(max_epochs=int(os.getenv("NUM_EPOCHS", 3)))
+trainer = Trainer(max_epochs=Config.BATCH_SIZE)
 trainer.fit(model, datamodule=datamodule)
-
