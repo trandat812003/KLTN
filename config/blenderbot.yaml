@@ -1,9 +1,8 @@
-model_name: strat_blenderbot_small
 pretrained_model_path: ./.cache/Blenderbot_small-90M
 custom_config_path: null
 gradient_checkpointing: false
 
-expanded_vocab:
+expanded_vocab_data:
   esconv:
     - "[Question]"
     - "[Restatement or Paraphrasing]"
@@ -24,6 +23,8 @@ expanded_vocab:
     - "[CON]"
     - "[SR]"
     - "[CR]"
+
+expanded_vocab_knowledge:
   basic:
     - "[xReact]"
     - "[xIntent]"

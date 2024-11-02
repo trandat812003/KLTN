@@ -1,19 +1,13 @@
-import yaml
 from transformers import AutoTokenizer
+from libs.config import Config, BlenderbotConfig
 
 
-def get_tokenizer(data_name: str, knowledge_name: str):
-    with open('./config/data.yaml', 'r', encoding='utf-8') as f:
-        config = yaml.safe_load(f)
-    
-    if 'model_name' not in config or 'pretrained_model_path' not in config:
-        raise ValueError("Invalid configuration format: 'model_name' or 'pretrained_model_path' missing.")
+def get_tokenizer():
+    tokenizer = AutoTokenizer.from_pretrained(BlenderbotConfig.PRETRAIN_MODEL)
 
-    toker = AutoTokenizer.from_pretrained(config['pretrained_model_path'])
+    expanded_vocab = BlenderbotConfig.EXPANDED_VOCAB_DATA[Config.DATA_NAME]
+    expanded_vocab += BlenderbotConfig.EXPANDED_VOCAB_KNOWLEDGE[Config.KNOWLEDGE_NAME]
 
-    if 'expanded_vocab' in config:
-        expanded_vocab = config['expanded_vocab'][data_name]
-        if knowledge_name != 'none':
-            expanded_vocab += config['expanded_vocab'][knowledge_name]
-        toker.add_tokens(expanded_vocab, special_tokens=True)
-    return toker
+    tokenizer.add_tokens(expanded_vocab, special_tokens=True)
+
+    return tokenizer
