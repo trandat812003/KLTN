@@ -22,27 +22,37 @@ class MyModule(L.LightningModule):
 
         self._model.to(self.device)
 
+        print(self.device)
+
+        self.tr_loss = 0.0
+        self.tr_ppl = 0.0
+        self.nb_tr_examples = 0
+        self.nb_tr_steps = 0
+
     def training_step(self, batch, batch_idx):
         labels = batch.pop('labels')
         strat_id = batch.pop('strat_id')
         outputs = self._model(**batch)
-        loss = self._calculator_loss(outputs, labels)
-        ppl = self._calculator_ppl_value(outputs, labels)
+        loss, ppl = self._calculator_loss_and_ppl_value(outputs, labels)
 
         input_ids = batch['input_ids']
 
-        tmp_loss = float(loss.item()) * (Config.BATCH_SIZE * Config.GRADIENT_ACCUMULATION_STEPS/ input_ids.shape[0])
-        tr_loss += tmp_loss
-        nb_tr_examples += input_ids.size(0)
-        nb_tr_steps += 1
-        mean_loss = tr_loss / nb_tr_steps
-
-        print(mean_loss)
+        tmp_loss = float(loss.item()) * (Config.BATCH_SIZE * Config.GRADIENT_ACCUMULATION_STEPS / input_ids.shape[0])
+        self.tr_loss += tmp_loss
+        self.nb_tr_examples += input_ids.size(0)
+        self.nb_tr_steps += 1
+        mean_loss = self.tr_loss / self.nb_tr_steps
+        
+        tmp_ppl = ppl.item() if ppl.item() < float('inf') else self.tr_ppl
+        self.tr_ppl += tmp_ppl
+        mean_ppl = self.tr_ppl / self.nb_tr_steps
 
         return loss
     
     def on_train_epoch_end(self):
         torch.nn.utils.clip_grad_norm_(self._model.parameters(), 1.0)
+        self.log("train_loss", self.tr_loss / self.nb_tr_steps, prog_bar=True)
+        self.log("train_ppl", self.tr_ppl / self.nb_tr_steps, prog_bar=True)
     
     def validation_step(self, batch, batch_idx):
         labels = batch.pop('labels')
@@ -50,14 +60,17 @@ class MyModule(L.LightningModule):
         outputs = self._model(**batch)
         labels[:, 0] = -100
         outputs = outputs[..., :self._tokenizer.vocab_size].contiguous()
-        loss = self._calculator_loss(outputs, labels)
+        loss, ppl = self._calculator_loss_and_ppl_value(outputs, labels)
+
+        print(f"Step {batch_idx + 1} - Loss: {loss:.4f}, PPL: {ppl:.4f}")
+
         return loss
     
     def test_step(self, batch, batch_idx):
         labels = batch.pop('labels')
         strat_id = batch.pop('strat_id')
         outputs = self._model(**batch)
-        loss = self._calculator_loss(outputs, labels)
+        loss = self._calculator_loss_and_ppl_value(outputs, labels)
 
         label_size = torch.sum(labels.ne(-100), dim=1).type_as(loss)
         masked_lm_loss = torch.sum(loss) / torch.sum(label_size)
@@ -73,16 +86,14 @@ class MyModule(L.LightningModule):
             encoder_attentions=outputs.encoder_attentions,
         )
 
-    def _calculator_loss(self, predict, labels):
+    def _calculator_loss_and_ppl_value(self, predict, labels):
         loss = F.cross_entropy(predict.view(-1, predict.size(-1)), labels.view(-1), reduction='none')
         loss = loss.view(labels.size(0), labels.size(1))
-
-        return loss
-    
-    def _calculator_ppl_value(self, loss, labels):
         label_size = torch.sum(labels.ne(-100), dim=1).type_as(loss)
         ppl_value = torch.exp(torch.mean(torch.sum(loss, dim=1).float() / label_size.float()))
-        return ppl_value
+        loss = torch.sum(loss) / torch.sum(label_size)
+
+        return loss, ppl_value
 
     def configure_optimizers(self):
         param_optimizer = list(self._model.named_parameters())

@@ -1,0 +1,197 @@
+{
+    "emotion_type": "depression",
+    "problem_type": "ongoing depression",
+    "situation": "I am always depressed and the upcoming holidays are making it a lot worse.",
+    "dialog": [
+        {
+            "text": "Hello. How are you today?",
+            "speaker": "sys",
+            "strategy": "Others",
+            "heal": ""
+        },
+        {
+            "text": "hi i am okay, a little bit sad though",
+            "speaker": "usr",
+            "knowledge": "[xReact] sad [xIntent] none [xWant] to cry [xNeed] none [xEffect] none"
+        },
+        {
+            "text": "Okay. I am very sorry to hear that! Do you want to tell me more about that?",
+            "speaker": "sys",
+            "strategy": "Question",
+            "heal": "[resp] Depressed [str] sadness, fine, sad, normal, angry [aff] Sad"
+        },
+        {
+            "text": "Well with the holidays coming up i have been very stressed and nervous about what i am going to do",
+            "speaker": "usr",
+            "knowledge": "[xReact] nervous [xIntent] none [xWant] to relax [xNeed] none [xEffect] none"
+        },
+        {
+            "text": "I really feel you there. Holidays are so hard.. especially with the way this year has been. Anything specific?",
+            "speaker": "sys",
+            "strategy": "Affirmation and Reassurance",
+            "heal": "[resp] Relax and enjoy. [str] calm, correct, enery, longtime, feelin [aff] Anxious"
+        },
+        {
+            "text": "Yes. I am a college student and I live on campus. The day before I moved in my dad said some unforgivable things to me and we haven't spoke since",
+            "speaker": "usr",
+            "knowledge": "[xReact] ashamed [xIntent] to be mean [xWant] move on [xNeed] none [xEffect] none"
+        },
+        {
+            "text": "I have no choice but to go live at home over the break but I am very scared about it",
+            "speaker": "usr",
+            "knowledge": "[xReact] worried [xIntent] none [xWant] to stay home [xNeed] none [xEffect] none"
+        },
+        {
+            "text": "Do you feel scared for your own self? Or of the situation in general? I'm sorry to hear that. Relationships with parents can be very difficult sometimes.",
+            "speaker": "sys",
+            "strategy": "Question",
+            "heal": "[resp] I want you to survive. [str] commit, killing, death, painless, option [aff] Afraid"
+        },
+        {
+            "text": "I'm around college age as well and also live at home. So I can understand your struggle.",
+            "speaker": "sys",
+            "strategy": "Self-disclosure",
+            "heal": "[resp] I want you to survive. [str] commit, killing, death, painless, option [aff] Afraid"
+        },
+        {
+            "text": "more for the situation in general. i know we will not speak but we will constantly be running into each other, my house is not big.",
+            "speaker": "usr",
+            "knowledge": "[xReact] nervous [xIntent] none [xWant] i do n't like to be around people [xNeed] none [xEffect] none"
+        },
+        {
+            "text": "and i have no car to escape it",
+            "speaker": "usr",
+            "knowledge": "[xReact] sad [xIntent] none [xWant] to get a new car [xNeed] none [xEffect] gets arrested"
+        },
+        {
+            "text": "It's like we live the same life. I also have no car to escape! It seems so small, but it's such a huge stressor when you feel trapped in an environment you're not positive in. I feel your pain and I empathize with you completely.",
+            "speaker": "sys",
+            "strategy": "Self-disclosure",
+            "heal": "[resp] And it never gets easy. [str] posting, pointless, ripped, passion, goal [aff] Sad"
+        },
+        {
+            "text": "It'll be hard but I hope you can make it through it throughout the holidays and enjoy yourself some. Are there any pros to going back home? Any pets?",
+            "speaker": "sys",
+            "strategy": "Affirmation and Reassurance",
+            "heal": "[resp] And it never gets easy. [str] posting, pointless, ripped, passion, goal [aff] Sad"
+        },
+        {
+            "text": "Thank you I appreciate that. I will be fine making it over the thanksgiving break but I am more nervous about covid-19 sending us home for good.",
+            "speaker": "usr",
+            "knowledge": "[xReact] nervous [xIntent] none [xWant] to be a good leader [xNeed] none [xEffect] none"
+        },
+        {
+            "text": "Not many to be honest. I have a hamster but he is at school with me so nothing at home to go back to",
+            "speaker": "usr",
+            "knowledge": "[xReact] bored [xIntent] none [xWant] to do something else [xNeed] none [xEffect] none"
+        },
+        {
+            "text": "It sounds like Covid- 19 is going to be a personal stressor for you. It's such a strange thing to have to live with already, the pandemic, and i'm sorry that it might end up pushing you where you don't want to be.",
+            "speaker": "sys",
+            "strategy": "Restatement or Paraphrasing",
+            "heal": "[resp] ), I'm here. [str] purpose, change, gets, future, offer [aff] Lonely"
+        },
+        {
+            "text": "Could you bring your hamster home with you? Even the smallest things could help a place feel more loving",
+            "speaker": "sys",
+            "strategy": "Providing Suggestions",
+            "heal": "[resp] ), I'm here. [str] purpose, change, gets, future, offer [aff] Lonely"
+        },
+        {
+            "text": "Yes it is very strange and I know that it is a big stressor on all of us, i don't want to sound selfish.",
+            "speaker": "usr",
+            "knowledge": "[xReact] guilty [xIntent] none [xWant] to be a good person [xNeed] none [xEffect] none"
+        },
+        {
+            "text": "Yes i am bringing him home with me so that is my little piece of joy that is coming along",
+            "speaker": "usr",
+            "knowledge": "[xReact] happy [xIntent] to be with me [xWant] to have a good time [xNeed] to have a baby [xEffect] none"
+        },
+        {
+            "text": "I don't think you're selfish at all. You have feelings you are entitled to have and are expressing them which is healthy and I encourage that behavior!",
+            "speaker": "sys",
+            "strategy": "Affirmation and Reassurance",
+            "heal": "[resp] happy enough to find life worth living [str] worth, purpose, living, meaning, happiness [aff] Joyful"
+        },
+        {
+            "text": "Good! I know how hard this situation can be. Very nerve wracking. The smallest things, even a hamster, can be so beneficial.",
+            "speaker": "sys",
+            "strategy": "Providing Suggestions",
+            "heal": "[resp] happy enough to find life worth living [str] worth, purpose, living, meaning, happiness [aff] Joyful"
+        },
+        {
+            "text": "Well thank you that does help me to feel better. Yes I am happy to bring him home with me and hoping I can have my niece over to intro duce her to him",
+            "speaker": "usr",
+            "knowledge": "[xReact] happy [xIntent] to have fun [xWant] to have fun [xNeed] to have a baby [xEffect] none"
+        },
+        {
+            "text": "You sound like a very determined person in making this trip as stress free as possible. I commend you for that! Maybe you could have your niece over often to play with your hamster just to soften the stress of being there",
+            "speaker": "sys",
+            "strategy": "Reflection of feelings",
+            "heal": "[resp] To love someone. [str] chore, video, shuffling, games, playing [aff] Sad"
+        },
+        {
+            "text": "It is surely my goal! I appreciate your kind words. I would love that if I had a car I could do that but I am not sure how much she will be able to come to my house. I am going to try though!",
+            "speaker": "usr",
+            "knowledge": "[xReact] happy [xIntent] to be there [xWant] to be there [xNeed] to make plans [xEffect] to see me"
+        },
+        {
+            "text": "Is Uber an option for you? I know there's a lot of rideshare services but they're not always financially reasonable. But that could be a way to get away if you ever need too!",
+            "speaker": "sys",
+            "strategy": "Providing Suggestions",
+            "heal": "[resp] What do you want out of life? [str] purpose, hobbies, hobby, meaning, consiousness [aff] Hopeful"
+        },
+        {
+            "text": "that is very true i didn't even think of that to be honest! I may use that along the way, thank you for the reminder!",
+            "speaker": "usr",
+            "knowledge": "[xReact] good [xIntent] to be honest [xWant] to be honest [xNeed] none [xEffect] none"
+        },
+        {
+            "text": "Sometimes I forget little things like that to help myself whenever I get too involved in the emotional aspect of things. I'm glad I could suggest it to you!",
+            "speaker": "sys",
+            "strategy": "Self-disclosure",
+            "heal": "[resp] Honestly? [str] happiness, remember, forgot, genuinely, happy [aff] Hopeful"
+        },
+        {
+            "text": "Thank you! Well i appreciate your help a lot and hope you have a great day!",
+            "speaker": "usr",
+            "knowledge": "[xReact] happy [xIntent] none [xWant] to do well [xNeed] none [xEffect] none"
+        },
+        {
+            "text": "Of course! I hope you do as well and happy holidays!",
+            "speaker": "sys",
+            "strategy": "Others",
+            "heal": "[resp] happy enough to find life worth living [str] commit, killing, death, painless, option [aff] Joyful"
+        }
+    ],
+    "survey_score": {
+        "seeker": {
+            "initial_emotion_intensity": "4",
+            "empathy": "5",
+            "relevance": "5",
+            "final_emotion_intensity": "3"
+        },
+        "supporter": {
+            "relevance": "5"
+        }
+    },
+    "seeker_question1": "They did good and helped me a lot",
+    "seeker_question2": "Nope it was all good",
+    "supporter_question1": "Good task !",
+    "supporter_question2": "Nope!",
+    "persona": "<persona> i am going to live at home over the holidays. <persona> i don t have a car. <persona> my dad said some unforgivable things to me the day before i moved in with my roommate. <persona> we haven t spoken in over a month and i don t know if we will ever speak again. <persona> the holidays are coming up and i am nervous. <input>",
+    "persona_list": [
+        "<persona> i am a college student. <input>",
+        "<persona> i am going to live at home for the holidays. <persona> my dad said some unforgivable things to me the day before i moved in. <input>",
+        "<persona> i am going to live at home for the holidays. <persona> my dad said some unforgivable things to me the day before i moved in. <persona> i am scared that i will not be able to speak to my dad for the rest of my life. <input>",
+        "<persona> i am going to live at home for the holidays. <persona> i am a college student living on campus. <persona> my dad said some unforgivable things to me the day before i moved in. <input>",
+        "<persona> i am going to live at home for the holidays. <persona> i don t have a car. <persona> my dad said some unforgivable things to me the day before i moved in. <input>",
+        "<persona> i am going to live at home over the holidays. <persona> i am a college student and live on campus. <persona> my dad said some unforgivable things to me the day before i moved in. <input>",
+        "<persona> i am going to live at home for the holidays. <persona> i am a college student and live on campus. <persona> my dad has said some unforgivable things to me and we have not spoken in over a year. <input>",
+        "<persona> i am going to live at home for the holidays. <persona> i am a college student living on campus. <persona> my dad has said some unforgivable things to me and we have not spoken in over a year. <persona> the holidays are coming up and i am very nervous about what to do with my life. <persona> we have a pet hamster at home. <input>",
+        "<persona> i am going to live at home for the holidays. <persona> i am a student at a local college. <persona> my parents are divorced and i do not speak to them anymore. <persona> the holidays are coming up and i am very nervous about what to do with my life. <persona> we have a pet hamster at home. <input>",
+        "<persona> i am going to live at home over the holidays. <persona> i don t have a car. <persona> my dad said some unforgivable things to me the day before i moved in with my roommate. <persona> we haven t spoken in over a month. <persona> the holidays are coming up and i am very nervous about what to do. <input>",
+        "<persona> i am going to live at home for the holidays. <persona> i don t have a car. <persona> my dad said some unforgivable things to me the day before i moved in with my roommate. <persona> we haven t spoken in over a month. <persona> the holidays are coming up and i don t know what to do. <input>",
+        "<persona> i am going to live at home over the holidays. <persona> i don t have a car. <persona> my dad said some unforgivable things to me the day before i moved in with my roommate. <persona> we haven t spoken in over a month and i don t know if we will ever speak again. <persona> the holidays are coming up and i am nervous. <input>"
+    ]
+}
