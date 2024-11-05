@@ -4,6 +4,10 @@ gradient_checkpointing: false
 
 expanded_vocab_data:
   esconv:
+    - "</s>"
+    - "<s>"
+    - "<persona>"
+    - "<input>"
     - "[Question]"
     - "[Restatement or Paraphrasing]"
     - "[Reflection of feelings]"
