@@ -30,6 +30,7 @@ class MyModule(L.LightningModule):
         self.nb_tr_steps = 0
 
     def training_step(self, batch, batch_idx):
+        breakpoint()
         labels = batch.pop('labels')
         strat_id = batch.pop('strat_id')
         outputs = self._model(**batch)
@@ -41,11 +42,9 @@ class MyModule(L.LightningModule):
         self.tr_loss += tmp_loss
         self.nb_tr_examples += input_ids.size(0)
         self.nb_tr_steps += 1
-        mean_loss = self.tr_loss / self.nb_tr_steps
         
         tmp_ppl = ppl.item() if ppl.item() < float('inf') else self.tr_ppl
         self.tr_ppl += tmp_ppl
-        mean_ppl = self.tr_ppl / self.nb_tr_steps
 
         return loss
     
@@ -70,21 +69,12 @@ class MyModule(L.LightningModule):
         labels = batch.pop('labels')
         strat_id = batch.pop('strat_id')
         outputs = self._model(**batch)
-        loss = self._calculator_loss_and_ppl_value(outputs, labels)
 
-        label_size = torch.sum(labels.ne(-100), dim=1).type_as(loss)
-        masked_lm_loss = torch.sum(loss) / torch.sum(label_size)
-        return Seq2SeqLMOutput(
-            loss=masked_lm_loss,
-            logits=outputs,
-            past_key_values=outputs.past_key_values,
-            decoder_hidden_states=outputs.decoder_hidden_states,
-            decoder_attentions=outputs.decoder_attentions,
-            cross_attentions=outputs.cross_attentions,
-            encoder_last_hidden_state=outputs.encoder_last_hidden_state,
-            encoder_hidden_states=outputs.encoder_hidden_states,
-            encoder_attentions=outputs.encoder_attentions,
-        )
+        loss, ppl = self._calculator_loss_and_ppl_value(outputs, labels)
+
+        print(f"Step {batch_idx + 1} - Loss: {loss:.4f}, PPL: {ppl:.4f}")
+
+        return loss
 
     def _calculator_loss_and_ppl_value(self, predict, labels):
         loss = F.cross_entropy(predict.view(-1, predict.size(-1)), labels.view(-1), reduction='none')

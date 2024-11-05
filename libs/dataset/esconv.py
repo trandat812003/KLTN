@@ -4,8 +4,8 @@ from libs.config import Config
 
 
 class ESConvDataset(BaseDataset):
-    def __init__(self, tokenizer: PreTrainedTokenizer) -> None:
-        super().__init__(tokenizer)
+    def __init__(self, tokenizer: PreTrainedTokenizer, stage: str) -> None:
+        super().__init__(tokenizer, stage)
 
     def _convert_data_to_inputs(self, data: dict):
         process = lambda x: self.tokenizer.convert_tokens_to_ids(self.tokenizer.tokenize(x))
@@ -14,9 +14,14 @@ class ESConvDataset(BaseDataset):
         inputs = []
         context = []
         knowledge = []
+        user_number = 0
+        persona_list = data['persona_list']
         
         for i in range(len(dialog)):
             text = self._norm(dialog[i]['text'])
+            if dialog[i]['speaker'] != 'sys':
+                text = "Persona:" + text
+
             text = process(text)
             
             if dialog[i]['speaker'] == 'sys':
@@ -40,18 +45,25 @@ class ESConvDataset(BaseDataset):
                     knowledge = []
             
             if i > 0 and dialog[i]['speaker'] == 'sys':
-                
+                if user_number > 2:
+                    persona = persona_list[user_number - 3]
+                else:
+                    persona = "<input>"
+
+                persona = process(persona)
+
                 res = {
-                    'context': context.copy(),
+                    'context': context.copy() + [process("System:")],
                     'knowledge': knowledge + heal,
                     'response': text,
                     'strat_id': strat_id,
+                    'persona': persona,
                 }
                 
                 inputs.append(res)
 
-            #if dialog[i]['speaker'] == 'sys':
-            #    text = [strat_id] + text
+            if dialog[i]['speaker'] == 'sys':
+               text = process("System:") + [strat_id] + text
 
             context = context + [text]
 

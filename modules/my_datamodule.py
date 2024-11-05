@@ -20,17 +20,17 @@ class MyDataModule(L.LightningDataModule):
         elif Config.DATA_NAME == 'mi':
             MyDataset = MIDataset
 
-        self.train_dataset = MyDataset(tokenizer)
-        self.test_dataset = MyDataset(tokenizer)
-        self.dev_dataset = MyDataset(tokenizer)
+        self.train_dataset = MyDataset(tokenizer, stage="train")
+        self.test_dataset = MyDataset(tokenizer, stage="test")
+        self.dev_dataset = MyDataset(tokenizer, "valid")
 
     def setup(self, stage: str):
         if stage == "fit":
-            self.train_dataset.setup(stage='train')
-            self.dev_dataset.setup(stage="valid")
+            self.train_dataset.setup()
+            self.dev_dataset.setup()
 
         if stage == "test" or stage == "predict":
-            self.test_dataset.setup(stage="test")
+            self.test_dataset.setup()
 
     def train_dataloader(self):
         return DataLoader(
