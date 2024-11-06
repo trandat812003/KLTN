@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from transformers import PreTrainedTokenizer
+from transformers.modeling_outputs import Seq2SeqModelOutput
 from transformers.models.blenderbot_small import (BlenderbotSmallConfig, BlenderbotSmallForConditionalGeneration)
 from libs.config import Config
 
@@ -97,10 +98,19 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
             return_dict=return_dict,
         )
 
-        outputs = decoder_outputs + encoder_outputs
+        outputs = Seq2SeqModelOutput(
+            last_hidden_state=decoder_outputs.last_hidden_state,
+            past_key_values=decoder_outputs.past_key_values,
+            decoder_hidden_states=decoder_outputs.hidden_states,
+            decoder_attentions=decoder_outputs.attentions,
+            cross_attentions=decoder_outputs.cross_attentions,
+            encoder_last_hidden_state=encoder_outputs.last_hidden_state,
+            encoder_hidden_states=encoder_outputs.hidden_states,
+            encoder_attentions=encoder_outputs.attentions,
+        )
         lm_logits = self.lm_head(outputs[0]) + self.final_logits_bias
 
-        return outputs
+        return lm_logits
     
     def predict_strategy(self, logits, encoded_info: dict):
         assert not self.training
