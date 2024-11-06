@@ -10,5 +10,6 @@ datamodule = MyDataModule(tokenizer=get_tokenizer())
 model = MyModule()
 
 
-trainer = Trainer(max_epochs=Config.BATCH_SIZE)
+trainer = Trainer(max_epochs=Config.NUM_EPOCHS)
 trainer.fit(model, datamodule=datamodule)
+trainer.test(model, datamodule=datamodule)
