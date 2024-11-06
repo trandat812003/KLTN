@@ -52,6 +52,10 @@ class MyModule(L.LightningModule):
         torch.nn.utils.clip_grad_norm_(self._model.parameters(), 1.0)
         self.log("train_loss", self.tr_loss / self.nb_tr_steps, prog_bar=True)
         self.log("train_ppl", self.tr_ppl / self.nb_tr_steps, prog_bar=True)
+        self.tr_loss = 0.0
+        self.tr_ppl = 0.0
+        self.nb_tr_examples = 0
+        self.nb_tr_steps = 0
     
     def validation_step(self, batch, batch_idx):
         labels = batch.pop('labels')
@@ -61,9 +65,25 @@ class MyModule(L.LightningModule):
         outputs = outputs[..., :self._tokenizer.vocab_size].contiguous()
         loss, ppl = self._calculator_loss_and_ppl_value(outputs, labels)
 
-        print(f"Step {batch_idx + 1} - Loss: {loss:.4f}, PPL: {ppl:.4f}")
+        input_ids = batch['input_ids']
+
+        tmp_loss = float(loss.item()) * (Config.BATCH_SIZE * Config.GRADIENT_ACCUMULATION_STEPS / input_ids.shape[0])
+        self.tr_loss += tmp_loss
+        self.nb_tr_examples += input_ids.size(0)
+        self.nb_tr_steps += 1
+        
+        tmp_ppl = ppl.item() if ppl.item() < float('inf') else self.tr_ppl
+        self.tr_ppl += tmp_ppl
 
         return loss
+    
+    def on_validation_epoch_end(self):
+        self.log("validation_loss", self.tr_loss / self.nb_tr_steps, prog_bar=True)
+        self.log("validation_ppl", self.tr_ppl / self.nb_tr_steps, prog_bar=True)
+        self.tr_loss = 0.0
+        self.tr_ppl = 0.0
+        self.nb_tr_examples = 0
+        self.nb_tr_steps = 0
     
     def test_step(self, batch, batch_idx):
         labels = batch.pop('labels')
@@ -72,9 +92,25 @@ class MyModule(L.LightningModule):
 
         loss, ppl = self._calculator_loss_and_ppl_value(outputs, labels)
 
-        print(f"Step {batch_idx + 1} - Loss: {loss:.4f}, PPL: {ppl:.4f}")
+        input_ids = batch['input_ids']
+
+        tmp_loss = float(loss.item()) * (Config.BATCH_SIZE * Config.GRADIENT_ACCUMULATION_STEPS / input_ids.shape[0])
+        self.tr_loss += tmp_loss
+        self.nb_tr_examples += input_ids.size(0)
+        self.nb_tr_steps += 1
+        
+        tmp_ppl = ppl.item() if ppl.item() < float('inf') else self.tr_ppl
+        self.tr_ppl += tmp_ppl
 
         return loss
+    
+    def on_test_epoch_end(self):
+        self.log("test_loss", self.tr_loss / self.nb_tr_steps, prog_bar=True)
+        self.log("test_ppl", self.tr_ppl / self.nb_tr_steps, prog_bar=True)
+        self.tr_loss = 0.0
+        self.tr_ppl = 0.0
+        self.nb_tr_examples = 0
+        self.nb_tr_steps = 0
 
     def _calculator_loss_and_ppl_value(self, predict, labels):
         loss = F.cross_entropy(predict.view(-1, predict.size(-1)), labels.view(-1), reduction='none')
