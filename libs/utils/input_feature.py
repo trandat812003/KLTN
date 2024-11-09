@@ -6,16 +6,13 @@ from libs.config import Config
 
 
 class InputFeature(object):
-    def __init__(self, input_ids, decoder_input_ids, labels, persona_input_ids):
+    def __init__(self, input_ids, decoder_input_ids, labels):
         self.input_ids = input_ids
         self.input_length = len(input_ids)
 
         self.decoder_input_ids = decoder_input_ids
         self.decoder_input_length = len(decoder_input_ids)
         self.labels = labels
-        self.persona_input_ids = persona_input_ids
-        self.persona_input_length = len(persona_input_ids)
-        self.padding_length = max(self.input_length, self.persona_input_length)
 
         self.input_len = self.input_length + self.decoder_input_length
 
@@ -46,16 +43,6 @@ class InputFeature(object):
             batch_first=True, 
             padding_value=-100
         )
-        persona_input_ids = pad_sequence(
-            [torch.tensor(f.persona_input_ids, dtype=torch.long) for f in features],
-            batch_first=True, 
-            padding_value=pad
-        )
-        persona_attention_mask = pad_sequence(
-            [torch.tensor([1.] * f.persona_input_length, dtype=torch.float) for f in features],
-            batch_first=True, 
-            padding_value=0.
-        )
         
         if Config.DATA_NAME == 'esconv':
             strat_id = torch.tensor([f.labels[0] for f in features], dtype=torch.long) - len(tokenizer) + 8
@@ -75,8 +62,6 @@ class InputFeature(object):
             'input_ids': input_ids,
             'attention_mask': attention_mask,
             'decoder_input_ids': decoder_input_ids,
-            "persona_input_ids": persona_input_ids,
-            "persona_attention_mask": persona_attention_mask,
             'labels': labels,
             'strat_id': strat_id,
         }

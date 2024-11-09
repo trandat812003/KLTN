@@ -58,7 +58,7 @@ class BaseDataset(Dataset):
 
         return features
     
-    def _featurize(self, context, knowledge, persona, response, strat_id):
+    def _featurize(self, context, knowledge, response, strat_id):
         pad = self.tokenizer.pad_token_id
         if pad is None:
             pad = self.tokenizer.eos_token_id
@@ -78,14 +78,13 @@ class BaseDataset(Dataset):
         context += [knowledge + [eos]]
         input_ids = sum(context, [])[:-1]
         input_ids = input_ids[-self.max_input_length:]
-        persona_input_ids = persona
         
         labels = ([strat_id] + response + [eos])[:self.max_decoder_input_length + 1]
         decoder_input_ids = [bos] + labels[:-1]
         
         assert len(decoder_input_ids) == len(labels), decoder_input_ids[1:] == labels[:-1]
 
-        return InputFeature(input_ids, decoder_input_ids, labels, persona_input_ids)
+        return InputFeature(input_ids, decoder_input_ids, labels)
 
     
     def __len__(self):

@@ -14,13 +14,9 @@ class ESConvDataset(BaseDataset):
         inputs = []
         context = []
         knowledge = []
-        user_number = 0
-        persona_list = data['persona_list']
         
         for i in range(len(dialog)):
             text = self._norm(dialog[i]['text'])
-            if dialog[i]['speaker'] != 'sys':
-                text = "Persona:" + text
 
             text = process(text)
             
@@ -45,25 +41,16 @@ class ESConvDataset(BaseDataset):
                     knowledge = []
             
             if i > 0 and dialog[i]['speaker'] == 'sys':
-                if user_number > 2:
-                    persona = persona_list[user_number - 3]
-                else:
-                    persona = "<input>"
-
-                persona = process(persona)
 
                 res = {
                     'context': context.copy() + [process("System:")],
                     'knowledge': knowledge + heal,
                     'response': text,
                     'strat_id': strat_id,
-                    'persona': persona,
                 }
                 
                 inputs.append(res)
 
-            if dialog[i]['speaker'] == 'sys':
-               text = process("System:") + [strat_id] + text
 
             context = context + [text]
 
