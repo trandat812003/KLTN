@@ -2,8 +2,10 @@
 import torch
 import lightning as L
 import torch.nn.functional as F
+import numpy as np
 from transformers.optimization import AdamW, get_linear_schedule_with_warmup
-from transformers.modeling_outputs import Seq2SeqLMOutput
+from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
+from sklearn.metrics import f1_score
 
 from libs.utils.get_model import get_model
 from libs.utils.get_tokenizer import get_tokenizer
@@ -24,10 +26,22 @@ class MyModule(L.LightningModule):
 
         print(self.device)
 
-        self.tr_loss = 0.0
-        self.tr_ppl = 0.0
-        self.nb_tr_examples = 0
-        self.nb_tr_steps = 0
+        self.train_loss = 0.0
+        self.train_ppl = 0.0
+        self.train_size = 0
+        self.train_steps = 0
+
+        self.test_loss = 0.0
+        self.test_ppl = 0.0
+        self.test_size = 0
+        self.test_steps = 0
+
+        self.val_loss = 0.0
+        self.val_ppl = 0.0
+        self.val_size = 0
+        self.val_steps = 0
+        self.val_metrics = {'bleu1': [], 'bleu2': [], 'bleu4': [], 'wf1': []}
+        self.test_metrics = {'bleu1': [], 'bleu2': [], 'bleu4': [], 'wf1': []}
 
     def training_step(self, batch, batch_idx):
         labels = batch.pop('labels')
@@ -38,23 +52,24 @@ class MyModule(L.LightningModule):
         input_ids = batch['input_ids']
 
         tmp_loss = float(loss.item()) * (Config.BATCH_SIZE * Config.GRADIENT_ACCUMULATION_STEPS / input_ids.shape[0])
-        self.tr_loss += tmp_loss
-        self.nb_tr_examples += input_ids.size(0)
-        self.nb_tr_steps += 1
-        
-        tmp_ppl = ppl.item() if ppl.item() < float('inf') else self.tr_ppl
-        self.tr_ppl += tmp_ppl
+        self.train_loss += tmp_loss
+        self.train_size += input_ids.size(0)
+        self.train_steps += 1
+
+        tmp_ppl = ppl.item() if ppl.item() < float('inf') else self.train_ppl
+        self.train_ppl += tmp_ppl
 
         return loss
-    
+
     def on_train_epoch_end(self):
         torch.nn.utils.clip_grad_norm_(self._model.parameters(), 1.0)
-        self.log("train_loss", self.tr_loss / self.nb_tr_steps, prog_bar=True)
-        self.log("train_ppl", self.tr_ppl / self.nb_tr_steps, prog_bar=True)
-        self.tr_loss = 0.0
-        self.tr_ppl = 0.0
-        self.nb_tr_examples = 0
-        self.nb_tr_steps = 0
+        self.log("train_loss", self.train_loss / self.train_steps, prog_bar=True)
+        self.log("train_ppl", np.exp(self.train_loss / self.train_steps), prog_bar=True)
+        self.train_loss = 0.0
+        self.train_ppl = 0.0
+        self.train_size = 0
+        self.train_steps = 0
+
     
     def validation_step(self, batch, batch_idx):
         labels = batch.pop('labels')
@@ -67,23 +82,53 @@ class MyModule(L.LightningModule):
         input_ids = batch['input_ids']
 
         tmp_loss = float(loss.item()) * (Config.BATCH_SIZE * Config.GRADIENT_ACCUMULATION_STEPS / input_ids.shape[0])
-        self.tr_loss += tmp_loss
-        self.nb_tr_examples += input_ids.size(0)
-        self.nb_tr_steps += 1
-        
-        tmp_ppl = ppl.item() if ppl.item() < float('inf') else self.tr_ppl
-        self.tr_ppl += tmp_ppl
+        self.val_loss += tmp_loss
+        self.val_size += input_ids.size(0)
+        self.val_steps += 1
+
+        tmp_ppl = ppl.item() if ppl.item() < float('inf') else self.val_ppl
+        self.val_ppl += tmp_ppl
+
+        predicted_ids = torch.argmax(outputs, dim=-1).cpu().tolist()
+        label_ids = labels.cpu().tolist()
+
+        # Tính BLEU và WF1
+        bleu1 = self._calculate_bleu(label_ids, predicted_ids, n_gram=1)
+        bleu2 = self._calculate_bleu(label_ids, predicted_ids, n_gram=2)
+        bleu4 = self._calculate_bleu(label_ids, predicted_ids, n_gram=4)
+        wf1 = self._calculate_wf1(label_ids, predicted_ids)
+
+        # Lưu giá trị vào biến val_metrics
+        self.val_metrics['bleu1'].append(bleu1)
+        self.val_metrics['bleu2'].append(bleu2)
+        self.val_metrics['bleu4'].append(bleu4)
+        self.val_metrics['wf1'].append(wf1)
 
         return loss
     
     def on_validation_epoch_end(self):
-        self.log("validate_loss", self.tr_loss / self.nb_tr_steps, prog_bar=True)
-        self.log("validate_ppl", self.tr_ppl / self.nb_tr_steps, prog_bar=True)
-        self.tr_loss = 0.0
-        self.tr_ppl = 0.0
-        self.nb_tr_examples = 0
-        self.nb_tr_steps = 0
-    
+        self.log("validate_loss", self.val_loss / self.val_steps, prog_bar=True)
+        self.log("validate_ppl", np.exp(self.val_loss / self.val_steps), prog_bar=True)
+
+        avg_bleu1 = sum(self.val_metrics['bleu1']) / len(self.val_metrics['bleu1'])
+        avg_bleu2 = sum(self.val_metrics['bleu2']) / len(self.val_metrics['bleu2'])
+        avg_bleu4 = sum(self.val_metrics['bleu4']) / len(self.val_metrics['bleu4'])
+        avg_wf1 = sum(self.val_metrics['wf1']) / len(self.val_metrics['wf1'])
+
+        # Log giá trị
+        self.log("epoch_bleu_1", avg_bleu1, prog_bar=True)
+        self.log("epoch_bleu_2", avg_bleu2, prog_bar=True)
+        self.log("epoch_bleu_4", avg_bleu4, prog_bar=True)
+        self.log("epoch_wf1", avg_wf1, prog_bar=True)
+
+        # Reset metrics
+        self.val_metrics = {'bleu1': [], 'bleu2': [], 'bleu4': [], 'wf1': []}
+
+        self.val_loss = 0.0
+        self.val_ppl = 0.0
+        self.val_size = 0
+        self.val_steps = 0
+
     def test_step(self, batch, batch_idx):
         labels = batch.pop('labels')
         strat_id = batch.pop('strat_id')
@@ -91,9 +136,57 @@ class MyModule(L.LightningModule):
 
         loss, ppl = self._calculator_loss_and_ppl_value(outputs, labels)
 
-        print(f"Step {batch_idx + 1} - Loss: {loss:.4f}, PPL: {ppl:.4f}")
+        input_ids = batch['input_ids']
+
+        tmp_loss = float(loss.item()) * (Config.BATCH_SIZE * Config.GRADIENT_ACCUMULATION_STEPS / input_ids.shape[0])
+        self.test_loss += tmp_loss
+        self.test_size += input_ids.size(0)
+        self.test_steps += 1
+
+        tmp_ppl = ppl.item() if ppl.item() < float('inf') else self.test_ppl
+        self.test_ppl += tmp_ppl
+
+        predicted_ids = torch.argmax(outputs, dim=-1).cpu().tolist()
+        label_ids = labels.cpu().tolist()
+
+        # Tính BLEU và WF1
+        bleu1 = self._calculate_bleu(label_ids, predicted_ids, n_gram=1)
+        bleu2 = self._calculate_bleu(label_ids, predicted_ids, n_gram=2)
+        bleu4 = self._calculate_bleu(label_ids, predicted_ids, n_gram=4)
+        wf1 = self._calculate_wf1(label_ids, predicted_ids)
+
+        # Lưu giá trị vào biến test_metrics
+        self.test_metrics['bleu1'].append(bleu1)
+        self.test_metrics['bleu2'].append(bleu2)
+        self.test_metrics['bleu4'].append(bleu4)
+        self.test_metrics['wf1'].append(wf1)
 
         return loss
+
+    
+    def on_test_epoch_end(self):
+        self.log("test_loss", self.test_loss / self.test_size, prog_bar=True)
+        self.log("test_ppl", np.exp(self.test_loss / self.test_size), prog_bar=True)
+
+        # Tính trung bình BLEU và WF1
+        avg_bleu1 = sum(self.test_metrics['bleu1']) / len(self.test_metrics['bleu1'])
+        avg_bleu2 = sum(self.test_metrics['bleu2']) / len(self.test_metrics['bleu2'])
+        avg_bleu4 = sum(self.test_metrics['bleu4']) / len(self.test_metrics['bleu4'])
+        avg_wf1 = sum(self.test_metrics['wf1']) / len(self.test_metrics['wf1'])
+
+        # Log giá trị
+        self.log("test_bleu_1", avg_bleu1, prog_bar=True)
+        self.log("test_bleu_2", avg_bleu2, prog_bar=True)
+        self.log("test_bleu_4", avg_bleu4, prog_bar=True)
+        self.log("test_wf1", avg_wf1, prog_bar=True)
+
+        # Reset metrics
+        self.test_metrics = {'bleu1': [], 'bleu2': [], 'bleu4': [], 'wf1': []}
+        
+        self.test_loss = 0.0
+        self.test_ppl = 0.0
+        self.test_size = 0
+        self.test_size = 0
 
     def _calculator_loss_and_ppl_value(self, predict, labels):
         loss = F.cross_entropy(predict.view(-1, predict.size(-1)), labels.view(-1), reduction='none')
@@ -103,6 +196,25 @@ class MyModule(L.LightningModule):
         loss = torch.sum(loss) / torch.sum(label_size)
 
         return loss, ppl_value
+    
+    def _calculate_bleu(self, references, predictions, n_gram=4):
+        weights = [1.0 / n_gram] * n_gram  # Tính điểm BLEU với n_gram
+        bleu_scores = []
+        chencherry = SmoothingFunction()
+
+        for ref, pred in zip(references, predictions):
+            score = sentence_bleu(
+                [ref], pred, weights=weights, smoothing_function=chencherry.method1
+            )
+            bleu_scores.append(score)
+
+        return sum(bleu_scores) / len(bleu_scores)
+    
+    def _calculate_wf1(self, references, predictions):
+        references = [item for sublist in references for item in sublist]  # Flatten danh sách
+        predictions = [item for sublist in predictions for item in sublist]  # Flatten danh sách
+
+        return f1_score(references, predictions, average='weighted')
 
     def configure_optimizers(self):
         param_optimizer = list(self._model.named_parameters())

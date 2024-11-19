@@ -21,6 +21,7 @@ class ESConvDataset(BaseDataset):
             text = self._norm(dialog[i]['text'])
             if dialog[i]['speaker'] != 'sys':
                 text = "Persona:" + text
+                user_number += 1
 
             text = process(text)
             
@@ -46,9 +47,17 @@ class ESConvDataset(BaseDataset):
             
             if i > 0 and dialog[i]['speaker'] == 'sys':
                 if user_number > 2:
-                    persona = persona_list[user_number - 3]
+                    index = user_number - 3
+                    if index >= len(persona_list):
+                        persona = persona_list[-1]
+                    else:
+                        persona = persona_list[index]
                 else:
                     persona = "<input>"
+
+                persona = persona.replace('<input>', '')
+                persona = persona.replace('<persona>', '').strip()
+                persona = "Persona Information: " + persona + "Dialogue: "
 
                 persona = process(persona)
 
