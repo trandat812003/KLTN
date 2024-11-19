@@ -26,35 +26,61 @@ class InputFeature(object):
             pad = tokenizer.eos_token_id
             assert pad is not None, 'either pad_token_id or eos_token_id should be provided'
         
-        input_ids = pad_sequence(
-            [torch.tensor(f.input_ids, dtype=torch.long) for f in features],
-            batch_first=True, 
-            padding_value=pad
+        max_len = 512
+
+        input_ids = pad_or_trim(
+            pad_sequence(
+                [torch.tensor(f.input_ids, dtype=torch.long) for f in features], 
+                batch_first=True, 
+                padding_value=pad
+            ), 
+            max_len, 
+            pad
         )
-        attention_mask = pad_sequence(
-            [torch.tensor([1.] * f.input_length, dtype=torch.float) for f in features],
-            batch_first=True, 
-            padding_value=0.
+        attention_mask = pad_or_trim(
+            pad_sequence(
+                [torch.tensor([1.] * f.input_length, dtype=torch.float) for f in features], 
+                batch_first=True, 
+                padding_value=0.
+            ), 
+            max_len, 
+            0.
         )
-        decoder_input_ids = pad_sequence(
-            [torch.tensor(f.decoder_input_ids, dtype=torch.long) for f in features],
-            batch_first=True, 
-            padding_value=pad
+        decoder_input_ids = pad_or_trim(
+            pad_sequence(
+                [torch.tensor(f.decoder_input_ids, dtype=torch.long) for f in features], 
+                batch_first=True, 
+                padding_value=pad
+            ), 
+            max_len, 
+            pad
         )
-        labels = pad_sequence(
-            [torch.tensor(f.labels, dtype=torch.long) for f in features],
-            batch_first=True, 
-            padding_value=-100
+        labels = pad_or_trim(
+            pad_sequence(
+                [torch.tensor(f.labels, dtype=torch.long) for f in features], 
+                batch_first=True, 
+                padding_value=-100
+            ), 
+            max_len, 
+            -100
         )
-        persona_input_ids = pad_sequence(
-            [torch.tensor(f.persona_input_ids, dtype=torch.long) for f in features],
-            batch_first=True, 
-            padding_value=pad
+        persona_input_ids = pad_or_trim(
+            pad_sequence(
+                [torch.tensor(f.persona_input_ids, dtype=torch.long) for f in features], 
+                batch_first=True, 
+                padding_value=pad
+            ), 
+            max_len, 
+            pad
         )
-        persona_attention_mask = pad_sequence(
-            [torch.tensor([1.] * f.persona_input_length, dtype=torch.float) for f in features],
-            batch_first=True, 
-            padding_value=0.
+        persona_attention_mask = pad_or_trim(
+            pad_sequence(
+                [torch.tensor([1.] * f.persona_input_length, dtype=torch.float) for f in features], 
+                batch_first=True, 
+                padding_value=0.
+            ), 
+            max_len, 
+            0.
         )
         
         if Config.DATA_NAME == 'esconv':
@@ -82,3 +108,16 @@ class InputFeature(object):
         }
         
         return res
+
+def pad_or_trim(tensor, max_len, pad_value):
+    if tensor.size(1) < max_len:
+        # Nếu tensor ngắn hơn max_len, padding
+        padding_needed = max_len - tensor.size(1)
+        padding_tensor = torch.full((tensor.size(0), padding_needed), pad_value, dtype=tensor.dtype)
+        return torch.cat([tensor, padding_tensor], dim=1)
+    elif tensor.size(1) > max_len:
+        # Nếu tensor dài hơn max_len, cắt bớt
+        return tensor[:, :max_len]
+    else:
+        # Nếu tensor có đúng size, không cần thay đổi
+        return tensor    
