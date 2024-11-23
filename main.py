@@ -10,6 +10,10 @@ datamodule = MyDataModule(tokenizer=get_tokenizer())
 model = MyModule()
 
 
-trainer = Trainer(max_epochs=Config.NUM_EPOCHS, gradient_clip_val=Config.GRADIENT_ACCUMULATION_STEPS)
+trainer = Trainer(
+    max_epochs=Config.NUM_EPOCHS, 
+    gradient_clip_val=Config.GRADIENT_ACCUMULATION_STEPS,
+    accelerator="cpu",
+)
 trainer.fit(model, datamodule=datamodule)
 trainer.test(model, datamodule=datamodule)
