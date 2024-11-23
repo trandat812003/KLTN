@@ -44,11 +44,11 @@ class MyModule(L.LightningModule):
         masked_lm_loss = torch.sum(loss) / torch.sum(label_size)
 
         input_ids = batch["input_ids"]
-        tmp_loss = float(loss.item())
+        tmp_loss = float(torch.sum(loss).item())
 
         metrics = self.metrics[phase]
         metrics["loss"] += tmp_loss
-        metrics["steps"] += label_size
+        metrics["steps"] += label_size.sum().float()
 
         return masked_lm_loss / (Config.BATCH_SIZE * Config.GRADIENT_ACCUMULATION_STEPS / input_ids.shape[0])
     
