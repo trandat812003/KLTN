@@ -31,7 +31,6 @@ class MyModule(L.LightningModule):
 
     def step(self, batch, batch_idx, phase):
         labels = batch.pop("labels")
-        strat_id = batch.pop("strat_id", None)
 
         outputs = self._model(**batch)
         if phase == "val":
