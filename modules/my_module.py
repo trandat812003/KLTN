@@ -13,13 +13,13 @@ class MyModule(L.LightningModule):
     def __init__(self):
         super().__init__()
 
-        self._tokenizer = get_tokenizer()
-        self._model = get_model()
-        self._model.tie_tokenizer(self._tokenizer)
+        self.tokenizer = get_tokenizer()
+        self.model = get_model(self.device)
+        self.model.tie_tokenizer(self.tokenizer)
 
         self.save_hyperparameters()
 
-        self._model.to(self.device)
+        self.model.to(self.device)
 
         print(self.device)
 
@@ -33,10 +33,10 @@ class MyModule(L.LightningModule):
         labels = batch.pop("labels")
         strat_id = batch.pop("strat_id", None)
 
-        outputs = self._model(**batch)
+        outputs = self.model(**batch)
         if phase == "val":
             labels[:, 0] = -100
-            outputs = outputs[..., :self._tokenizer.vocab_size].contiguous()
+            outputs = outputs[..., :self.tokenizer.vocab_size].contiguous()
 
         loss = F.cross_entropy(outputs.view(-1, outputs.size(-1)), labels.view(-1), reduction="none")
         loss = loss.view(labels.size(0), labels.size(1))
@@ -81,7 +81,7 @@ class MyModule(L.LightningModule):
         metrics["loss"], metrics["steps"] = 0.0, 0
 
     def configure_optimizers(self):
-        param_optimizer = list(self._model.named_parameters())
+        param_optimizer = list(self.model.named_parameters())
         no_decay = ["bias", "ln", "LayerNorm.weight"]
         optimizer_grouped_parameters = [
             {"params": [p for n, p in param_optimizer if p.requires_grad and not any(nd in n for nd in no_decay)], "weight_decay": 0.01},
