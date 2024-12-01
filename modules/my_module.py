@@ -13,6 +13,8 @@ class MyModule(L.LightningModule):
     def __init__(self):
         super().__init__()
 
+        print(self.device)
+
         self.tokenizer = get_tokenizer()
         self.model = get_model(self.device)
         self.model.tie_tokenizer(self.tokenizer)
@@ -21,7 +23,7 @@ class MyModule(L.LightningModule):
 
         self.model.to(self.device)
 
-        print(self.device)
+        
 
         self.metrics = {
             "train": {"loss": 0.0, "steps": 0},
