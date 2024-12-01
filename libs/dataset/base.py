@@ -61,7 +61,7 @@ class BaseDataset(Dataset):
             raise ValueError("Token IDs (pad, bos, eos) must be defined.")
 
         context = [c + [eos] for c in context]
-        context.append(knowledge + [eos])
+        context += [knowledge + [eos]]
         input_ids = sum(context, [])[-self.max_input_length:]
 
         labels = ([strat_id] + response + [eos])[:self.max_decoder_input_length + 1]

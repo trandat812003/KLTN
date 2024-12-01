@@ -4,7 +4,7 @@ from modules.my_model import MyModel
 from libs.config import BlenderbotConfig
 
 
-def get_model(checkpoint: str=None, device=torch.device('cpu')):
+def get_model(device=torch.device('cpu'), checkpoint: str=None):
     model = MyModel.from_pretrained(BlenderbotConfig.PRETRAIN_MODEL)
     if BlenderbotConfig.CUSTOM_CONFIG_PATH is not None:
         model = MyModel(AutoConfig.from_pretrained(BlenderbotConfig.CUSTOM_CONFIG_PATH))

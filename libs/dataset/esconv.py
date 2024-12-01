@@ -16,8 +16,7 @@ class ESConvDataset(BaseDataset):
         inputs, context, knowledge = [], [], []
 
         for i, turn in enumerate(dialog):
-            text = self._norm(turn.get('text', ""))
-            text_tokens = process(text)
+            text = process(self._norm(turn['text']))
 
             if turn['speaker'] == 'sys':
                 strat_id = process('[' + turn['strategy'] + ']')
@@ -31,17 +30,17 @@ class ESConvDataset(BaseDataset):
             elif Config.KNOWLEDGE_NAME in ['bm25', 'oracle']:
                 knowledge = process('[knowledge]') + process(turn.get('knowledge', ""))
             else:
-                knowledge = process(turn.get('knowledge', ""))
+                knowledge = process(turn['knowledge'])
 
             if i > 0 and turn['speaker'] == 'sys':
                 inputs.append({
-                    'context': context + [process("System:")],
+                    'context': context.copy(),
                     'knowledge': knowledge + heal,
-                    'response': text_tokens,
+                    'response': text,
                     'strat_id': strat_id,
                 })
 
-            context.append(text_tokens)
+            context = context + [text]
 
         return inputs
 
