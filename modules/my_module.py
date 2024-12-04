@@ -90,7 +90,7 @@ class MyModule(L.LightningModule):
             {"params": [p for n, p in param_optimizer if p.requires_grad and any(nd in n for nd in no_decay)], "weight_decay": 0.0}
         ]
 
-        optimizer = AdamW(optimizer_grouped_parameters, lr=3e-5)
+        optimizer = AdamW(optimizer_grouped_parameters, lr=1.5e-5)
         num_optim_steps = 2455
         scheduler = get_linear_schedule_with_warmup(
             optimizer, num_warmup_steps=100, num_training_steps=num_optim_steps

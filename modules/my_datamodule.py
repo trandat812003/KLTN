@@ -72,29 +72,41 @@ class MyDataModule(L.LightningDataModule):
     
     @staticmethod
     def collate(features: List[InputFeature], tokenizer: PreTrainedTokenizer, is_test=False):
-        pad = tokenizer.pad_token_id
+        pad = tokenizer.pad_token_id if tokenizer.pad_token_id else tokenizer.eos_token_id
+        max_len = max([f.padding_length for f in features])
         if pad is None:
             pad = tokenizer.eos_token_id
             assert pad is not None, 'either pad_token_id or eos_token_id should be provided'
         
-        input_ids = pad_sequence(
+        input_ids = my_pad_sequence(
             [torch.tensor(f.input_ids, dtype=torch.long) for f in features],
             batch_first=True, 
+            max_len=max_len, 
             padding_value=pad
         )
-        attention_mask = pad_sequence(
+        attention_mask = my_pad_sequence(
             [torch.tensor([1.] * f.input_length, dtype=torch.float) for f in features],
             batch_first=True, 
+            max_len=max_len, 
+            padding_value=0.)
+
+        persona_input_ids = my_pad_sequence(
+            [torch.tensor(f.persona_input_ids, dtype=torch.long) for f in features],
+            batch_first=True, 
+            max_len=max_len, 
+            padding_value=pad
+        )
+        persona_attention_mask = my_pad_sequence(
+            [torch.tensor([1.] * f.persona_input_length, dtype=torch.float) for f in features],
+            batch_first=True,
+            max_len=max_len, 
             padding_value=0.
         )
         
-        if is_test:
-            decoder_input_ids = torch.tensor([[f.decoder_input_ids[0]] for f in features], dtype=torch.long)
-            labels = None
-        else:
+        if not is_test:
             decoder_input_ids = pad_sequence(
                 [torch.tensor(f.decoder_input_ids, dtype=torch.long) for f in features],
-                batch_first=True, 
+                batch_first=True,
                 padding_value=pad
             )
             labels = pad_sequence(
@@ -102,27 +114,42 @@ class MyDataModule(L.LightningDataModule):
                 batch_first=True, 
                 padding_value=-100
             )
+        else:
+            decoder_input_ids = torch.tensor([[f.decoder_input_ids[0]] for f in features], dtype=torch.long)
+            labels = None
         
-        if Config.DATA_NAME == 'esconv':
-            strat_id = torch.tensor([f.labels[0] for f in features], dtype=torch.long) - len(tokenizer) + 8
-        elif Config.DATA_NAME == 'mi':
-            strat_id = torch.tensor([f.labels[0] for f in features], dtype=torch.long) - len(tokenizer) + 10
-        
-        if Config.KNOWLEDGE_NAME == 'basic':
-            strat_id += 5
-        elif Config.KNOWLEDGE_NAME == 'bm25':
-            strat_id += 1
-        elif Config.KNOWLEDGE_NAME == 'oracle':
-            strat_id += 6
-        elif Config.KNOWLEDGE_NAME in ['sbert','graph']:
-            strat_id += 8
+        strat_id = torch.tensor([f.labels[0] for f in features], dtype=torch.long) - len(tokenizer) + 8
         
         res = {
             'input_ids': input_ids,
             'attention_mask': attention_mask,
             'decoder_input_ids': decoder_input_ids,
+            "persona_input_ids": persona_input_ids,
+            "persona_attention_mask": persona_attention_mask,
             'labels': labels,
             'strat_id': strat_id,
         }
         
         return res
+
+
+def my_pad_sequence(sequences, batch_first=False, max_len=None, padding_value=0.0):
+    max_size = sequences[0].size()
+    trailing_dims = max_size[1:]
+    if max_len is None:
+        max_len = max([s.size(0) for s in sequences])
+    if batch_first:
+        out_dims = (len(sequences), max_len) + trailing_dims
+    else:
+        out_dims = (max_len, len(sequences)) + trailing_dims
+
+    out_tensor = sequences[0].new_full(out_dims, padding_value)
+    for i, tensor in enumerate(sequences):
+        length = tensor.size(0)
+        # use index notation to prevent duplicate references to the tensor
+        if batch_first:
+            out_tensor[i, :length, ...] = tensor
+        else:
+            out_tensor[:length, i, ...] = tensor
+
+    return out_tensor
