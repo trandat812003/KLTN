@@ -8,6 +8,7 @@ class ESConvDataset(BaseDataset):
         super().__init__(tokenizer, stage)
 
     def _convert_data_to_inputs(self, data: dict) -> list[dict]:
+        process = lambda x: self.tokenizer.convert_tokens_to_ids(self.tokenizer.tokenize(x))
         dialog = data.get('dialog', [])
         if not dialog:
             raise ValueError("Dialog data is empty or missing.")
@@ -15,35 +16,28 @@ class ESConvDataset(BaseDataset):
         dialog = data['dialog']
         inputs = []
         context = []
-        knowledge = ''
+        knowledge = []
         user_number = 0
         persona_list = data['persona_list']
 
         for i, turn in enumerate(dialog):
-            text = self._norm(dialog[i]['text'])
-            if dialog[i]['speaker'] != 'sys':
-                text = "Persona:" + text
+            text = process(self._norm(turn['text']))
+            if turn['speaker'] != 'sys':
+                text = process(self._norm("Persona:" + turn['text']))
                 user_number += 1
 
             if turn['speaker'] == 'sys':
-                strat_id = '[' + turn['strategy'] + ']'
+                strat_id = process('[' + turn['strategy'] + ']')
+                assert len(strat_id) == 1, "Strategy ID must be a single token."
+                strat_id = strat_id[0]
 
-                heal = ''
+                heal = []
                 if Config.KNOWLEDGE_NAME in ['sbert', 'graph']:
-                    heal = turn['heal']
-
-            elif Config.KNOWLEDGE_NAME in ['bm25', 'oracle']:
-                knowledge = '[knowledge]' + turn['knowledge']
+                    heal = process(turn['heal'])
             else:
-                if Config.KNOWLEDGE_NAME in ['basic','oracle','sbert','graph']:
-                    knowledge = dialog[i]['knowledge']
-                elif Config.KNOWLEDGE_NAME == 'bm25':
-                    knowledge = '[knowledge]' + dialog[i]['knowledge']
-                else:
-                    knowledge = ''
+                knowledge = process(turn['knowledge'])
             
-            if i > 0 and dialog[i]['speaker'] == 'sys' and (self.stage != 'test' or dialog[i - 1]['speaker'] != 'sys'):
-                last_text = self._norm(dialog[i - 1]['text'])
+            if i > 0 and turn['speaker'] == 'sys' and (self.stage != 'test' or dialog[i - 1]['speaker'] != 'sys'):
                 if user_number > 2:
                     index = user_number - 3
                     if index >= len(persona_list):
@@ -53,23 +47,20 @@ class ESConvDataset(BaseDataset):
                 else:
                     persona = "<input>"
 
-                persona = persona.replace('<input>', '')
-                persona = persona.replace('<persona>', '', 1).strip()
-                persona = "</s> <s>".join([p.strip() for p in persona.split('<persona>')])
-                persona = "Persona Information:\n" + persona + '</s> <s>' + "Dialogue:\n"
+                persona = process(persona)
 
                 res = {
-                    'last_text': last_text,
-                    'context': context.copy() + ["System:"],
+                    'context': context.copy() + [process("System:")],
                     'knowledge': knowledge + heal,
+                    'response': text,
                     'strat_id': strat_id,
                     'persona': persona
                 }
 
                 inputs.append(res)
 
-            if dialog[i]['speaker'] == 'sys':
-                text = "System:" + strat_id + text
+            if turn['speaker'] == 'sys':
+                text = process("System:") + [strat_id] + text
 
             context = context + [text]
 
