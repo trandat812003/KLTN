@@ -73,6 +73,7 @@ class MyDataModule(L.LightningDataModule):
     @staticmethod
     def collate(features: List[InputFeature], tokenizer: PreTrainedTokenizer, is_test=False):
         pad = tokenizer.pad_token_id if tokenizer.pad_token_id else tokenizer.eos_token_id
+
         max_len = max([f.padding_length for f in features])
         if pad is None:
             pad = tokenizer.eos_token_id
@@ -102,21 +103,27 @@ class MyDataModule(L.LightningDataModule):
             max_len=max_len, 
             padding_value=0.
         )
+        labels = my_pad_sequence(
+            [torch.tensor(f.labels, dtype=torch.long) for f in features],
+            batch_first=True, 
+            max_len=max_len, 
+            padding_value=-100
+        )
         
         if not is_test:
-            decoder_input_ids = pad_sequence(
+            decoder_input_ids = my_pad_sequence(
                 [torch.tensor(f.decoder_input_ids, dtype=torch.long) for f in features],
                 batch_first=True,
+                max_len=max_len, 
                 padding_value=pad
             )
-            labels = pad_sequence(
-                [torch.tensor(f.labels, dtype=torch.long) for f in features],
-                batch_first=True, 
-                padding_value=-100
-            )
         else:
-            decoder_input_ids = torch.tensor([[f.decoder_input_ids[0]] for f in features], dtype=torch.long)
-            labels = None
+            decoder_input_ids = my_pad_sequence(
+                torch.tensor([[f.decoder_input_ids[0]] for f in features], dtype=torch.long),
+                batch_first=True,
+                max_len=max_len, 
+                padding_value=pad
+            )
         
         strat_id = torch.tensor([f.labels[0] for f in features], dtype=torch.long) - len(tokenizer) + 8
         
