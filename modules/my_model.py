@@ -1,15 +1,20 @@
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from transformers import PreTrainedTokenizer
 from transformers.modeling_outputs import Seq2SeqModelOutput
 from transformers.models.blenderbot_small import (BlenderbotSmallConfig, BlenderbotSmallForConditionalGeneration)
-from libs.config import Config
 
 
 class MyModel(BlenderbotSmallForConditionalGeneration):
     def __init__(self, config: BlenderbotSmallConfig):
         super().__init__(config)
         self.tokenizer: PreTrainedTokenizer = None
+
+        self.persona_norm = nn.LayerNorm(self.model.config.d_model, elementwise_affine=True)  # 512
+        self.context_norm = nn.LayerNorm(self.model.config.d_model, elementwise_affine=True)  # 512
+
+        self.persona_context_w = nn.Parameter(torch.tensor([1 / 3, 1 / 3, 1 / 3]))
 
     def forward(
         self,
@@ -25,16 +30,6 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
         **kwargs
     ):
         assert self.tokenizer is not None
-
-        outputs = self.model(
-            input_ids,
-            attention_mask=attention_mask,
-            decoder_input_ids=decoder_input_ids,
-            encoder_outputs=encoder_outputs,
-            past_key_values=past_key_values,
-            use_cache=use_cache,
-            return_dict=return_dict,
-        )
 
         output_attentions = self.model.config.output_attentions
         output_hidden_states = self.model.config.output_hidden_states
@@ -92,6 +87,7 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
             encoder_hidden_states=encoder_outputs.hidden_states,
             encoder_attentions=encoder_outputs.attentions,
         )
+        
         lm_logits = self.lm_head(outputs[0]) + self.final_logits_bias
 
         return lm_logits

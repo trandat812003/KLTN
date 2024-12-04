@@ -52,24 +52,25 @@ class BaseDataset(Dataset):
         features = [self._featurize(**ipt) for ipt in inputs]
         return features
     
-    def _featurize(self, context: list[int], knowledge: list[int], response: list[int], strat_id: int) -> InputFeature:
+    def _featurize(self, context: list, persona, knowledge: list, strat_id, last_text) -> InputFeature:
+        process = lambda x: self.tokenizer.convert_tokens_to_ids(self.tokenizer.tokenize(x))
         pad = self.tokenizer.pad_token_id or self.tokenizer.eos_token_id
         bos = self.tokenizer.bos_token_id or self.tokenizer.cls_token_id
         eos = self.tokenizer.eos_token_id or self.tokenizer.sep_token_id
 
         if not all([pad, bos, eos]):
             raise ValueError("Token IDs (pad, bos, eos) must be defined.")
-
-        context = [c + [eos] for c in context]
-        context += [knowledge + [eos]]
-        input_ids = sum(context, [])[-self.max_input_length:]
-
-        labels = ([strat_id] + response + [eos])[:self.max_decoder_input_length + 1]
+        
+        strat_id = process(strat_id)
+        context = self.tokenizer(context).input_ids
+        context += process(knowledge) + [eos]
+        labels = (strat_id + context + [eos])[:self.max_decoder_input_length + 1]
+        persona_input_ids = self.tokenizer(persona).input_ids
+        input_ids = self.tokenizer('</s> <s>'.join(last_text)).input_ids
+        input_ids = input_ids[-self.max_input_length:]
         decoder_input_ids = [bos] + labels[:-1]
 
-        assert len(decoder_input_ids) == len(labels), "Mismatch between decoder inputs and labels"
-
-        return InputFeature(input_ids, decoder_input_ids, labels)
+        return InputFeature(input_ids, decoder_input_ids, labels, persona_input_ids)
     
     def __len__(self) -> int:
         return len(self.data_list)
