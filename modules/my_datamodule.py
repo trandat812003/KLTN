@@ -103,25 +103,22 @@ class MyDataModule(L.LightningDataModule):
             max_len=max_len, 
             padding_value=0.
         )
-        labels = my_pad_sequence(
+        labels = pad_sequence(
             [torch.tensor(f.labels, dtype=torch.long) for f in features],
             batch_first=True, 
-            max_len=max_len, 
             padding_value=-100
         )
         
         if not is_test:
-            decoder_input_ids = my_pad_sequence(
+            decoder_input_ids = pad_sequence(
                 [torch.tensor(f.decoder_input_ids, dtype=torch.long) for f in features],
                 batch_first=True,
-                max_len=max_len, 
                 padding_value=pad
             )
         else:
-            decoder_input_ids = my_pad_sequence(
+            decoder_input_ids = pad_sequence(
                 torch.tensor([[f.decoder_input_ids[0]] for f in features], dtype=torch.long),
                 batch_first=True,
-                max_len=max_len, 
                 padding_value=pad
             )
         
