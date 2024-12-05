@@ -87,21 +87,21 @@ class MyDataModule(L.LightningDataModule):
             batch_first=True, 
             padding_value=0.
         )
+        labels = pad_sequence(
+            [torch.tensor(f.labels, dtype=torch.long) for f in features],
+            batch_first=True, 
+            padding_value=-100
+        )
         
         if is_test:
             decoder_input_ids = torch.tensor([[f.decoder_input_ids[0]] for f in features], dtype=torch.long)
-            labels = None
         else:
             decoder_input_ids = pad_sequence(
                 [torch.tensor(f.decoder_input_ids, dtype=torch.long) for f in features],
                 batch_first=True, 
                 padding_value=pad
             )
-            labels = pad_sequence(
-                [torch.tensor(f.labels, dtype=torch.long) for f in features],
-                batch_first=True, 
-                padding_value=-100
-            )
+            
         
         if Config.DATA_NAME == 'esconv':
             strat_id = torch.tensor([f.labels[0] for f in features], dtype=torch.long) - len(tokenizer) + 8
