@@ -90,7 +90,7 @@ class MyModule(L.LightningModule):
         ]
 
         optimizer = AdamW(optimizer_grouped_parameters, lr=3e-5)
-        num_optim_steps = 2455
+        num_optim_steps = 12300 * Config.NUM_EPOCHS // Config.BATCH_SIZE + 1 # len(data_train) = 12285
         scheduler = get_linear_schedule_with_warmup(
             optimizer, num_warmup_steps=100, num_training_steps=num_optim_steps
         )
