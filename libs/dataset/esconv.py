@@ -28,7 +28,7 @@ class ESConvDataset(BaseDataset):
                     heal = process(turn['heal'])
 
             elif Config.KNOWLEDGE_NAME in ['bm25', 'oracle']:
-                knowledge = process('[knowledge]') + process(turn.get('knowledge', ""))
+                knowledge = process('[knowledge]') + process(turn['knowledge'])
             else:
                 knowledge = process(turn['knowledge'])
 
@@ -39,6 +39,9 @@ class ESConvDataset(BaseDataset):
                     'response': text,
                     'strat_id': strat_id,
                 })
+
+            if turn['speaker'] == 'sys':
+                text = process("System:") + [strat_id] + text
 
             context = context + [text]
 
