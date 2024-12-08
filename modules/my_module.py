@@ -2,28 +2,25 @@ import torch
 import numpy as np
 import lightning as L
 import torch.nn.functional as F
+from transformers.tokenization_utils import PreTrainedTokenizer
 from transformers.optimization import AdamW, get_linear_schedule_with_warmup
 
-from libs.utils.get_model import get_model
-from libs.utils.get_tokenizer import get_tokenizer
 from libs.config import Config
 
 
 class MyModule(L.LightningModule):
-    def __init__(self):
+    def __init__(self, tokenizer: PreTrainedTokenizer, model):
         super().__init__()
 
         print(self.device)
 
-        self.tokenizer = get_tokenizer()
-        self.model = get_model(self.device)
+        self.tokenizer = tokenizer
+        self.model = model
         self.model.tie_tokenizer(self.tokenizer)
 
         self.save_hyperparameters()
 
         self.model.to(self.device)
-
-        
 
         self.metrics = {
             "train": {"loss": 0.0, "steps": 0},

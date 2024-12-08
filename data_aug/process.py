@@ -54,7 +54,7 @@ def process_files(txt_file_path, json_file_path, output_txt_file_path):
 
 # Đường dẫn tệp
 txt_file_path = '/home/trandat/Documents/lab/KLTN/dataset/esconv/sbert/valid.txt'
-json_file_path = '/home/trandat/Documents/lab/KLTN/data_agument/PESConv.json'
+json_file_path = '/home/trandat/Documents/lab/KLTN/data_augment/PESConv.json'
 output_txt_file_path = '/home/trandat/Documents/lab/KLTN/dataset/esconv/pesconv/valid.txt' 
 
 # Gọi hàm xử lý
