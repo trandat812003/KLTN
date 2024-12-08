@@ -40,9 +40,6 @@ class ESConvDataset(BaseDataset):
                     'strat_id': strat_id,
                 })
 
-            if turn['speaker'] == 'sys':
-                text = process("System:") + [strat_id] + text
-
             context = context + [text]
 
         return inputs

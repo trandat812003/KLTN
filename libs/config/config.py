@@ -12,3 +12,5 @@ class Config:
     NUM_EPOCHS = int(os.getenv("NUM_EPOCHS"))
     BATCH_SIZE = int(os.getenv("BATCH_SIZE"))
     GRADIENT_ACCUMULATION_STEPS = int(os.getenv("GRADIENT_ACCUMULATION_STEPS"))
+    MAX_INPUT_LENGTH = int(os.getenv("MAX_INPUT_LENGTH"))
+    MAX_DECODER_INPUT_LENGTH = int(os.getenv("MAX_DECODER_INPUT_LENGTH"))
