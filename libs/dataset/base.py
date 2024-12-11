@@ -46,9 +46,9 @@ class BaseDataset(Dataset):
         return features
     
     def _featurize(self, context: list[int], knowledge: list[int], response: list[int], strat_id: int) -> InputFeature:
-        pad = self.tokenizer.pad_token_id or self.tokenizer.eos_token_id
-        bos = self.tokenizer.bos_token_id or self.tokenizer.cls_token_id
-        eos = self.tokenizer.eos_token_id or self.tokenizer.sep_token_id
+        pad = self.tokenizer.pad_token_id if self.tokenizer.pad_token_id else self.tokenizer.eos_token_id
+        bos = self.tokenizer.bos_token_id if self.tokenizer.bos_token_id else  self.tokenizer.cls_token_id
+        eos = self.tokenizer.eos_token_id if self.tokenizer.eos_token_id else  self.tokenizer.sep_token_id
 
         if not all([pad, bos, eos]):
             raise ValueError("Token IDs (pad, bos, eos) must be defined.")
