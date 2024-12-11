@@ -35,8 +35,11 @@ class MyDataModule(L.LightningDataModule):
             self.train_dataset.setup()
             self.dev_dataset.setup()
 
-        if stage == "test" or stage == "predict":
+        if stage == "test":
             self.test_dataset.setup()
+
+        if stage == "predict":
+            self.dev_dataset.setup()
 
     def train_dataloader(self):
         return DataLoader(
@@ -59,12 +62,12 @@ class MyDataModule(L.LightningDataModule):
             self.test_dataset,
             batch_size=self.BATCH_SIZE, 
             num_workers=self.num_workers,
-            collate_fn=partial(MyDataModule.collate, tokenizer=self.tokenizer, is_test=True)
+            collate_fn=partial(MyDataModule.collate, tokenizer=self.tokenizer)
         )
 
     def predict_dataloader(self):
         return DataLoader(
-            self.test_dataset,
+            self.dev_dataset,
             batch_size=self.BATCH_SIZE, 
             num_workers=self.num_workers,
             collate_fn=partial(MyDataModule.collate, tokenizer=self.tokenizer, is_test=True)
