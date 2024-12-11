@@ -4,14 +4,11 @@ from modules.my_datamodule import MyDataModule
 from libs.config import Config
 from libs.utils.get_tokenizer import get_tokenizer
 from libs.utils.get_model import get_model
-from libs.utils.aug import aug
 
 tokenizer = get_tokenizer()
 datamodule = MyDataModule(tokenizer=tokenizer)
 model = get_model("cpu")
 module = MyModule(tokenizer, model)
-
-aug(tokenizer=tokenizer, model=model)
 
 trainer = Trainer(
     max_epochs=Config.NUM_EPOCHS, 

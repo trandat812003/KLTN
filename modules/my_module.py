@@ -4,6 +4,8 @@ import lightning as L
 import torch.nn.functional as F
 from transformers.tokenization_utils import PreTrainedTokenizer
 from transformers.optimization import AdamW, get_linear_schedule_with_warmup
+import wandb
+from datetime import datetime
 
 from libs.config import Config
 
@@ -28,6 +30,16 @@ class MyModule(L.LightningModule):
             "test": {"loss": 0.0, "steps": 0}
         }
 
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        wandb.init(
+            project=f'{Config.BASELINE}', 
+            name=f'{Config.KNOWLEDGE_NAME}_{timestamp}',
+            config={
+                "learning_rate": 3e-5,
+                "epochs": Config.NUM_EPOCHS,
+            },
+        )
+
     def step(self, batch, batch_idx, phase):
         labels = batch.pop("labels")
 
@@ -51,7 +63,9 @@ class MyModule(L.LightningModule):
         return masked_lm_loss / (Config.BATCH_SIZE * Config.GRADIENT_ACCUMULATION_STEPS / input_ids.shape[0])
     
     def training_step(self, batch, batch_idx):
-        return self.step(batch, batch_idx, "train")
+        loss = self.step(batch, batch_idx, "train")
+        wandb.log({"train_epoch_loss": self.metrics['train']["loss"] / self.metrics['train']["steps"]})
+        return loss
 
     def validation_step(self, batch, batch_idx):
         return self.step(batch, batch_idx, "val")
@@ -73,6 +87,7 @@ class MyModule(L.LightningModule):
         loss = metrics["loss"] / metrics["steps"]
         ppl = np.exp(loss)
 
+        wandb.log({f"{phase}_loss": loss, f"{phase}_ppl": ppl})
         self.log(f"{phase}_loss", loss, prog_bar=True)
         self.log(f"{phase}_ppl", ppl, prog_bar=True)
 
