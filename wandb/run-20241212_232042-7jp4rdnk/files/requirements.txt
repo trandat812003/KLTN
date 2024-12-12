@@ -27,7 +27,7 @@ parso==0.8.3
 torchaudio==2.4.1+6d4f7b3
 stack-data==0.2.0
 sacremoses==0.0.43
-transformers==4.9.2
+transformers==4.38.0
 torch==2.4.1.post100
 wcwidth==0.2.5
 importlib_resources==6.4.0
