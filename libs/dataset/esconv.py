@@ -1,6 +1,7 @@
 from transformers.tokenization_utils import PreTrainedTokenizer
 from libs.dataset.base import BaseDataset
 from libs.config import Config
+from libs.utils.utils import _norm
 
 
 class ESConvDataset(BaseDataset):
@@ -16,7 +17,7 @@ class ESConvDataset(BaseDataset):
         inputs, context, knowledge = [], [], []
 
         for i, turn in enumerate(dialog):
-            text = process(self._norm(turn['text']))
+            text = process(_norm(turn['text']))
 
             if turn['speaker'] == 'sys':
                 strat_id = process('[' + turn['strategy'] + ']')
@@ -40,9 +41,11 @@ class ESConvDataset(BaseDataset):
                     'strat_id': strat_id,
                 })
 
+                self.inputs.append({
+                    'context': [self.tokenizer.decode(c) for c in context.copy()],
+                    'response': self.tokenizer.decode(text),
+                })
+
             context = context + [text]
 
         return inputs
-
-    def _norm(self, s: str) -> str:
-        return ' '.join(s.strip().split())

@@ -1,17 +1,18 @@
 import warnings
 from collections import Counter
 import numpy as np
+from transformers.tokenization_utils import PreTrainedTokenizer
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
 
 class Metric(object):
-    def __init__(self, toker):
+    def __init__(self, tokenizer: PreTrainedTokenizer):
         self.refs = []
         self.hyps = []
-        self.toker = toker
+        self.tokenizer = tokenizer
 
     def forword(self, refs: str, hyp: str): 
-        self.refs.append([self.toker.tokenize(e) for e in refs])
-        self.hyps.append(self.toker.tokenize(hyp))
+        self.refs.append([self.tokenizer.tokenize(e) for e in refs])
+        self.hyps.append(self.tokenizer.tokenize(hyp))
 
     def calc_bleu_k(self, k):
         weights = [1. / k] * k + (4 - k) * [0.]
@@ -49,36 +50,7 @@ class Metric(object):
                 f1 = 2 * p * r / max(p + r, 1e-10)
                 scores.append(f1)
             f1_scores.append(max(scores))
-        return np.mean(f1_scores), f1_scores
-    
-    def calc_distinct_k(self, k):
-        d = {}
-        tot = 0
-        for sen in self.hyps:
-            for i in range(0, len(sen)-k):
-                key = tuple(sen[i:i+k])
-                d[key] = 1
-                tot += 1
-        if tot > 0:
-            dist = len(d) / tot
-        else:
-            warnings.warn('the distinct is invalid')
-            dist = 0.
-        return dist
-    
-    def calc_unigram_f1(self):
-        f1_scores = []
-        for hyp, refs in zip(self.hyps, self.refs):
-            scores = []
-            for ref in refs:
-                cross = Counter(hyp) & Counter(ref)
-                cross = sum(cross.values())
-                p = cross / max(len(hyp), 1e-10)
-                r = cross / max(len(ref), 1e-10)
-                f1 = 2 * p * r / max(p + r, 1e-10)
-                scores.append(f1)
-            f1_scores.append(max(scores))
-        return np.mean(f1_scores), f1_scores
+        return np.mean(f1_scores)
     
     def calc_rouge_l(self, beta=1.2):
         scores = []
@@ -96,7 +68,7 @@ class Metric(object):
             else:
                 score = 0.0
             scores.append(score)
-        return np.mean(scores), scores
+        return np.mean(scores)
     
     def _lcs(string, sub):
         """

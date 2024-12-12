@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv('./config/.env')
 
@@ -14,3 +15,6 @@ class Config:
     GRADIENT_ACCUMULATION_STEPS = int(os.getenv("GRADIENT_ACCUMULATION_STEPS"))
     MAX_INPUT_LENGTH = int(os.getenv("MAX_INPUT_LENGTH"))
     MAX_DECODER_INPUT_LENGTH = int(os.getenv("MAX_DECODER_INPUT_LENGTH"))
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    WANDB_NAME = f'{KNOWLEDGE_NAME}_{timestamp}'
