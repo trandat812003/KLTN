@@ -75,10 +75,7 @@ class MyDataModule(L.LightningDataModule):
     
     @staticmethod
     def collate(features: List[InputFeature], tokenizer: PreTrainedTokenizer, is_test=False):
-        pad = tokenizer.pad_token_id
-        if pad is None:
-            pad = tokenizer.eos_token_id
-            assert pad is not None, 'either pad_token_id or eos_token_id should be provided'
+        pad = tokenizer.pad_token_id if tokenizer.pad_token_id else tokenizer.eos_token_id
         
         input_ids = pad_sequence(
             [torch.tensor(f.input_ids, dtype=torch.long) for f in features],

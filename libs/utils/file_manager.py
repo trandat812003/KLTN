@@ -13,16 +13,16 @@ def read_file(file_name: str) -> list[str]:
 def load_file_pickle(root_file: str, file_name: str):
     if not os.path.exists(root_file):
         os.makedirs(root_file)
-        return None
+        return None, None
 
     file_name = os.path.join(root_file, file_name)
     if not os.path.exists(file_name):
-        return None
+        return None, None
     
     with open(file_name, 'rb') as f:
         reader = pickle.load(f)
     
-    return reader
+    return reader['data_list'], reader['inputs']
 
 
 def save_file_pickle(file_name: str, data: any):
