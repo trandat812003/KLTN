@@ -14,9 +14,10 @@ class BaseDataset(Dataset):
         self.max_decoder_input_length = Config.MAX_DECODER_INPUT_LENGTH
         self.stage = stage
         self.data_list = []
+        self.inputs = []
 
     def setup(self) -> None:
-        self.data_list = load_file_pickle(
+        self.data_list, self.inputs = load_file_pickle(
             root_file=f'./.cache/dataset/{Config.DATA_NAME}.{Config.BASELINE}',
             file_name=f'{self.stage}.pkl'
         )
@@ -25,6 +26,7 @@ class BaseDataset(Dataset):
             return
         
         self.data_list = []
+        self.inputs = []
         reader = read_file(f'./dataset/{Config.DATA_NAME}/{Config.BASELINE}/{self.stage}.txt')
 
         for line in reader:
@@ -35,7 +37,7 @@ class BaseDataset(Dataset):
 
         save_file_pickle(
             f'./.cache/dataset/{Config.DATA_NAME}.{Config.BASELINE}/{self.stage}.pkl',
-            self.data_list
+            {'data_list': self.data_list, 'inputs': self.inputs}
         )
 
     def _convert_inputs_to_features(self, inputs: list[dict]) -> list[InputFeature]:

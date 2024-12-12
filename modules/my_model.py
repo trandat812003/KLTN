@@ -41,16 +41,8 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
         if kwargs.get('predict', None) is None:
             return lm_logits
 
-        masked_lm_loss = None
-        labels = kwargs['labels']
-        if labels is not None:
-            loss = F.cross_entropy(lm_logits.view(-1, lm_logits.size(-1)), labels.view(-1), reduction='none')
-            loss = loss.view(labels.size(0), labels.size(1))
-            label_size = torch.sum(labels.ne(-100), dim=1).type_as(loss)
-            masked_lm_loss = torch.sum(loss) / torch.sum(label_size)
-
         return Seq2SeqLMOutput(
-            loss=masked_lm_loss,
+            # loss=masked_lm_loss,
             logits=lm_logits,
             past_key_values=outputs.past_key_values,
             decoder_hidden_states=outputs.decoder_hidden_states,
@@ -157,7 +149,7 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
         """
         if kwargs['predict']: 
             models_kwargs = super(MyModel, self).prepare_inputs_for_generation(input_ids, **kwargs)
-            models_kwargs.update({'predict': True, 'labels': kwargs['labels']})
+            models_kwargs.update({'predict': True})
             return models_kwargs
         else:
             return super(MyModel, self).prepare_inputs_for_generation(input_ids, **kwargs)
