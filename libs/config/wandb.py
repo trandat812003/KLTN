@@ -1,4 +1,5 @@
 import wandb
+import csv
 from libs.config import Config
 
 
@@ -13,5 +14,15 @@ class Logging:
             },
         )
 
+        self.csv_path = f'./lightning_logs/{Config.WANDB_NAME}.csv'
+        with open(self.csv_path, "w", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(["epoch", "phase", "loss", "ppl"])
+
     def log(self, d: dict):
         wandb.log(d)
+
+    def log_csv(self, epoch, phase, loss, ppl):
+        with open(self.csv_path, "a", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow([epoch, phase, loss, ppl])
