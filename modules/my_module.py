@@ -54,6 +54,9 @@ class MyModule(L.LightningModule):
     def training_step(self, batch, batch_idx):
         loss = self.step(batch, batch_idx, "train")
         logging.log({"train_epoch_loss": self.metrics['train']["loss"] / self.metrics['train']["steps"]})
+
+        current_lr = self.optimizers().param_groups[0]["lr"]
+        logging.log({"learning_rate": current_lr})
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -77,8 +80,7 @@ class MyModule(L.LightningModule):
         ppl = np.exp(loss)
 
         logging.log({f"{phase}_loss": loss, f"{phase}_ppl": ppl})
-        self.log(f"{phase}_loss", loss, prog_bar=True)
-        self.log(f"{phase}_ppl", ppl, prog_bar=True)
+        logging.log_csv(self.current_epoch, phase, loss, ppl)
 
         metrics["loss"], metrics["steps"] = 0.0, 0
 
@@ -93,7 +95,7 @@ class MyModule(L.LightningModule):
         optimizer = AdamW(optimizer_grouped_parameters, lr=3e-5)
         num_optim_steps = 12300 * Config.NUM_EPOCHS // Config.BATCH_SIZE + 1 # len(data_train) = 12285
         scheduler = get_linear_schedule_with_warmup(
-            optimizer, num_warmup_steps=100, num_training_steps=num_optim_steps
+            optimizer, num_warmup_steps=1000, num_training_steps=num_optim_steps
         )
 
         return [optimizer], [{"scheduler": scheduler, "interval": "step"}]
