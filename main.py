@@ -2,9 +2,7 @@ import torch
 import csv
 import numpy as np
 from tqdm import tqdm
-from torch.utils.data import DataLoader
 import torch.nn.functional as F
-from functools import partial
 from lightning import Trainer
 
 from modules.my_module import MyModule
