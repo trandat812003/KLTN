@@ -14,7 +14,7 @@ class Logging:
             },
         )
 
-        self.csv_path = f'./lightning_logs/{Config.WANDB_NAME}.csv'
+        self.csv_path = f'./logs_csv/{Config.WANDB_NAME}.csv'
         with open(self.csv_path, "w", newline="") as file:
             writer = csv.writer(file)
             writer.writerow(["epoch", "phase", "loss", "ppl"])

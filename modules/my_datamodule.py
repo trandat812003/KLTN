@@ -39,7 +39,7 @@ class MyDataModule(L.LightningDataModule):
             self.test_dataset.setup()
 
         if stage == "predict":
-            self.dev_dataset.setup()
+            self.test_dataset.setup()
 
     def train_dataloader(self):
         return DataLoader(
