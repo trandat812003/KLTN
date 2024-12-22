@@ -10,10 +10,8 @@ from tqdm import tqdm
 
 
 def aug(tokenizer, model):
-    print('aug')
     aug_dataset = AugDataset(tokenizer, stage="aug")
     aug_dataset.setup()
-    print('setup done')
 
     aug_dataloader = DataLoader(
         aug_dataset,

@@ -10,12 +10,11 @@ from libs.config import Config
 class AugDataset(BaseDataset):
     def __init__(self, tokenizer: PreTrainedTokenizer, stage: str) -> None:
         super().__init__(tokenizer, stage)
-        self.max_input_length = Config.MAX_INPUT_LENGTH
-        self.max_decoder_input_length = Config.MAX_DECODER_INPUT_LENGTH
         self.data_list = []
+        self.inputs = []
 
     def setup(self) -> None:
-        self.data_list = load_file_pickle(
+        self.data_list, self.inputs = load_file_pickle(
             root_file=f'./.cache/dataset/aug_dataset',
             file_name=f'augesc.pkl'
         )
@@ -24,6 +23,7 @@ class AugDataset(BaseDataset):
             return
         
         self.data_list = []
+        self.inputs = []
         reader = read_file(f'./data_aug/augesc.txt')
 
         for line in reader:
@@ -48,6 +48,11 @@ class AugDataset(BaseDataset):
                     'response': text,
                 })
 
+                self.inputs.append({
+                    'context': [self.tokenizer.decode(c) for c in context.copy()],
+                    'response': self.tokenizer.decode(text),
+                })
+
             context = context + [text]
 
         return inputs
@@ -67,9 +72,9 @@ class AugDataset(BaseDataset):
             raise ValueError("Token IDs (bos, eos) must be defined.")
 
         context = [c + [eos] for c in context]
-        input_ids = sum(context, [])[-self.max_input_length:]
+        input_ids = sum(context, [])[-Config.MAX_INPUT_LENGTH:]
 
-        labels = (response + [eos])[:self.max_decoder_input_length + 1]
+        labels = (response + [eos])[:Config.MAX_DECODER_INPUT_LENGTH + 1]
         decoder_input_ids = [bos] + labels[:-1]
 
         assert len(decoder_input_ids) == len(labels), "Mismatch between decoder inputs and labels"

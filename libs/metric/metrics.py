@@ -70,7 +70,7 @@ class Metric(object):
             scores.append(score)
         return np.mean(scores)
     
-    def _lcs(string, sub):
+    def _lcs(self, string, sub):
         """
         Calculates longest common subsequence for a pair of tokenized strings
         :param string : list of str : tokens from a string split using whitespace
