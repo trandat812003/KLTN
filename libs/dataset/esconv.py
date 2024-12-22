@@ -44,8 +44,7 @@ class ESConvDataset(BaseDataset):
                 self.inputs.append({
                     'context': [self.tokenizer.decode(c) for c in context.copy()],
                     'response': self.tokenizer.decode(text),
-                })
-
+                })st)
             context = context + [text]
 
         return inputs

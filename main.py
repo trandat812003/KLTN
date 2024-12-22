@@ -21,6 +21,7 @@ datamodule = MyDataModule(tokenizer=tokenizer)
 model = get_model("cpu")
 module = MyModule(tokenizer, model)
 
+
 trainer = Trainer(
     max_epochs=Config.NUM_EPOCHS, 
     gradient_clip_val=Config.GRADIENT_ACCUMULATION_STEPS,
@@ -99,3 +100,4 @@ with open(logging.csv_path, "a", newline="") as file:
 
 del dataset
 del dataloader
+
