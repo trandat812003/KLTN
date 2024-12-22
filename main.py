@@ -38,13 +38,8 @@ model = module.model
 eos = tokenizer.eos_token_id if tokenizer.eos_token_id else tokenizer.sep_token_id
 
 metric = Metric(tokenizer=tokenizer)
-dataset = datamodule.test_dataset
-
-dataloader = DataLoader(
-    dataset,
-    batch_size=Config.BATCH_SIZE, 
-    collate_fn=partial(MyDataModule.collate, tokenizer=tokenizer)
-)
+datamodule.setup("test")
+dataloader = datamodule.test_dataloader()
 
 test_loss = 0
 test_steps = 0
@@ -73,11 +68,8 @@ with open(logging.csv_path, "a", newline="") as file:
     writer.writerow(["loss", "ppl"])
     writer.writerow([loss, ppl])
 
-dataloader = DataLoader(
-    dataset,
-    batch_size=Config.BATCH_SIZE, 
-    collate_fn=partial(MyDataModule.collate, tokenizer=tokenizer, is_test=True)
-)
+dataloader = datamodule.predict_dataloader()
+dataset = datamodule.test_dataset
 
 index = 0
 
