@@ -1,4 +1,5 @@
 import wandb
+import os
 import csv
 from libs.config import Config
 
@@ -15,6 +16,8 @@ class Logging:
         )
 
         self.csv_path = f'./logs_csv/{Config.WANDB_NAME}.csv'
+        if not os.path.exists('logs_csv'):
+            os.makedirs('logs_csv')
         with open(self.csv_path, "w", newline="") as file:
             writer = csv.writer(file)
             writer.writerow(["epoch", "phase", "loss", "ppl"])

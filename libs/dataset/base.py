@@ -10,8 +10,6 @@ class BaseDataset(Dataset):
     def __init__(self, tokenizer: PreTrainedTokenizer, stage: str) -> None:
         super().__init__()
         self.tokenizer = tokenizer
-        self.max_input_length = Config.MAX_INPUT_LENGTH
-        self.max_decoder_input_length = Config.MAX_DECODER_INPUT_LENGTH
         self.stage = stage
         self.data_list = []
         self.inputs = []
@@ -57,9 +55,9 @@ class BaseDataset(Dataset):
 
         context = [c + [eos] for c in context]
         context += [knowledge + [eos]]
-        input_ids = sum(context, [])[-self.max_input_length:]
+        input_ids = sum(context, [])[-Config.MAX_INPUT_LENGTH:]
 
-        labels = ([strat_id] + response + [eos])[:self.max_decoder_input_length + 1]
+        labels = ([strat_id] + response + [eos])[:Config.MAX_DECODER_INPUT_LENGTH + 1]
         decoder_input_ids = [bos] + labels[:-1]
 
         assert len(decoder_input_ids) == len(labels), "Mismatch between decoder inputs and labels"

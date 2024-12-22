@@ -13,8 +13,24 @@ class Config:
     NUM_EPOCHS = int(os.getenv("NUM_EPOCHS"))
     BATCH_SIZE = int(os.getenv("BATCH_SIZE"))
     GRADIENT_ACCUMULATION_STEPS = int(os.getenv("GRADIENT_ACCUMULATION_STEPS"))
-    MAX_INPUT_LENGTH = int(os.getenv("MAX_INPUT_LENGTH"))
-    MAX_DECODER_INPUT_LENGTH = int(os.getenv("MAX_DECODER_INPUT_LENGTH"))
+    # MAX_INPUT_LENGTH = int(os.getenv("MAX_INPUT_LENGTH"))
+    # MAX_DECODER_INPUT_LENGTH = int(os.getenv("MAX_DECODER_INPUT_LENGTH"))
+    _MAX_INPUT_LENGTH = int(os.getenv("MAX_INPUT_LENGTH"))
+    _MAX_DECODER_INPUT_LENGTH = int(os.getenv("MAX_DECODER_INPUT_LENGTH"))
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     WANDB_NAME = f'{KNOWLEDGE_NAME}_{timestamp}'
+
+    @classmethod
+    @property
+    def MAX_INPUT_LENGTH(cls):
+        if cls.BASELINE in ['kemi']:
+            return 256
+        return 512
+
+    @classmethod
+    @property
+    def MAX_DECODER_INPUT_LENGTH(cls):
+        if cls.BASELINE in ['kemi']:
+            return 40
+        return 50
