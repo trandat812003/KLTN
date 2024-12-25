@@ -8,7 +8,6 @@ from libs.dataset import BaseDataset, MIDataset, ESConvDataset
 from libs.config import Config
 from libs.utils.get_tokenizer import get_tokenizer
 from libs.utils.get_model import get_model
-from libs.utils.get_checkpoint import get_checkpoints
 from libs.utils.utils import cut_seq_to_eos, norm
 from libs.metric.metrics import Metric
 
