@@ -11,7 +11,7 @@ class Logging:
             project=f'{Config.BASELINE}', 
             name=Config.WANDB_NAME,
             config={
-                "learning_rate": 3e-5,
+                "learning_rate": Config.lr,
                 "epochs": Config.NUM_EPOCHS,
             },
         )

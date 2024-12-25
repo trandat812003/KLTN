@@ -1,6 +1,7 @@
 from transformers.tokenization_utils import PreTrainedTokenizer
 from libs.dataset.base import BaseDataset
 from libs.config import Config
+from libs.utils.utils import norm
 
 
 class ESConvDataset(BaseDataset):
@@ -13,19 +14,11 @@ class ESConvDataset(BaseDataset):
         if not dialog:
             raise ValueError("Dialog data is empty or missing.")
 
-        dialog = data['dialog']
-        inputs = []
-        context = []
-        knowledge = []
+        inputs, context, knowledge = [], [], []
         user_number = 0
         persona_list = data['persona_list']
 
         for i, turn in enumerate(dialog):
-            text = process(self._norm(turn['text']))
-            if turn['speaker'] != 'sys':
-                text = process(self._norm("Persona:" + turn['text']))
-                user_number += 1
-
             if turn['speaker'] == 'sys':
                 strat_id = process('[' + turn['strategy'] + ']')
                 assert len(strat_id) == 1, "Strategy ID must be a single token."
@@ -36,6 +29,13 @@ class ESConvDataset(BaseDataset):
                     heal = process(turn['heal'])
             else:
                 knowledge = process(turn['knowledge'])
+
+            text = process(norm(turn['text']))
+            if turn['speaker'] != 'sys':
+                text = process(norm("Persona:" + turn['text']))
+                user_number += 1
+            else:
+                text = process("System:") + [strat_id] + text
             
             if i > 0 and turn['speaker'] == 'sys' and (self.stage != 'test' or dialog[i - 1]['speaker'] != 'sys'):
                 if user_number > 2:
@@ -49,22 +49,18 @@ class ESConvDataset(BaseDataset):
 
                 persona = process(persona)
 
-                res = {
+                inputs.append({
                     'context': context.copy() + [process("System:")],
                     'knowledge': knowledge + heal,
                     'response': text,
-                    'strat_id': strat_id,
-                    'persona': persona
-                }
+                    'persona': persona,
+                })
 
-                inputs.append(res)
-
-            if turn['speaker'] == 'sys':
-                text = process("System:") + [strat_id] + text
+                self.inputs.append({
+                    'context': [self.tokenizer.decode(c) for c in context.copy()],
+                    'response': self.tokenizer.decode(text),
+                })
 
             context = context + [text]
 
         return inputs
-
-    def _norm(self, s: str) -> str:
-        return ' '.join(s.strip().split())

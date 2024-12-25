@@ -3,7 +3,7 @@ from transformers.tokenization_utils import PreTrainedTokenizer
 from torch.utils.data import Dataset
 from libs.config import Config
 from libs.utils.input_feature import InputFeature
-from libs.utils.save_and_load_pickle import save_file_pickle, load_file_pickle
+from libs.utils.file_manager import save_file_pickle, load_file_pickle, read_file
 
 
 class BaseDataset(Dataset):
@@ -14,16 +14,10 @@ class BaseDataset(Dataset):
         self.max_decoder_input_length = 50
         self.stage = stage
         self.data_list = []
-
-    def _read_file(self, file_name: str) -> list[str]:
-        try:
-            with open(file_name, 'r', encoding='utf-8') as f:
-                return f.readlines()
-        except FileNotFoundError:
-            raise FileNotFoundError(f"File not found: {file_name}")
+        self.inputs = []
 
     def setup(self) -> None:
-        self.data_list = load_file_pickle(
+        self.data_list, self.inputs = load_file_pickle(
             root_file=f'./.cache/dataset/{Config.DATA_NAME}.{Config.BASELINE}',
             file_name=f'{self.stage}.pkl'
         )
@@ -32,7 +26,8 @@ class BaseDataset(Dataset):
             return
         
         self.data_list = []
-        reader = self._read_file(f'./dataset/{Config.DATA_NAME}/{Config.BASELINE}/{self.stage}.txt')
+        self.inputs = []
+        reader = read_file(f'./dataset/{Config.DATA_NAME}/{Config.BASELINE}/{self.stage}.txt')
 
         for line in reader:
             data = json.loads(line)
@@ -42,7 +37,7 @@ class BaseDataset(Dataset):
 
         save_file_pickle(
             f'./.cache/dataset/{Config.DATA_NAME}.{Config.BASELINE}/{self.stage}.pkl',
-            self.data_list
+            {'data_list': self.data_list, 'inputs': self.inputs}
         )
 
     def _convert_inputs_to_features(self, inputs: list[dict]) -> list[InputFeature]:
@@ -52,7 +47,7 @@ class BaseDataset(Dataset):
         features = [self._featurize(**ipt) for ipt in inputs]
         return features
     
-    def _featurize(self, context: list, persona, knowledge: list, strat_id, response) -> InputFeature:
+    def _featurize(self, context: list, persona, knowledge: list, response) -> InputFeature:
         pad = self.tokenizer.pad_token_id or self.tokenizer.eos_token_id
         bos = self.tokenizer.bos_token_id or self.tokenizer.cls_token_id
         eos = self.tokenizer.eos_token_id or self.tokenizer.sep_token_id
@@ -64,7 +59,7 @@ class BaseDataset(Dataset):
         context += [knowledge + [eos]]
         input_ids = sum(context, [])[-self.max_input_length:]
 
-        labels = ([strat_id] + response + [eos])[:self.max_decoder_input_length + 1]
+        labels = (response + [eos])[:self.max_decoder_input_length + 1]
         decoder_input_ids = [bos] + labels[:-1]
         persona_input_ids = persona
 

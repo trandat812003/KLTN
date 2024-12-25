@@ -1,3 +1,6 @@
+import torch
+from torch.nn.utils.rnn import pad_sequence
+from typing import List
 import lightning as L
 from functools import partial
 from torch.utils.data import DataLoader
@@ -6,16 +9,11 @@ from libs.config import Config
 from libs.dataset import BaseDataset, MIDataset, ESConvDataset
 from libs.utils.input_feature import InputFeature
 from multiprocessing import cpu_count
-import torch
-from torch.nn.utils.rnn import pad_sequence
-from typing import List
-from libs.config import Config
 
 
 class MyDataModule(L.LightningDataModule):
     def __init__(self, tokenizer: PreTrainedTokenizer) -> None:
         super().__init__()
-
         self.BATCH_SIZE = Config.BATCH_SIZE
         self.tokenizer = tokenizer
         self.num_workers = min(4, cpu_count() // 2)
@@ -43,6 +41,7 @@ class MyDataModule(L.LightningDataModule):
             self.train_dataset,
             batch_size=self.BATCH_SIZE, 
             num_workers=self.num_workers,
+            shuffle=True,
             collate_fn=partial(MyDataModule.collate, tokenizer=self.tokenizer)
         )
 
@@ -73,11 +72,7 @@ class MyDataModule(L.LightningDataModule):
     @staticmethod
     def collate(features: List[InputFeature], tokenizer: PreTrainedTokenizer, is_test=False):
         pad = tokenizer.pad_token_id if tokenizer.pad_token_id else tokenizer.eos_token_id
-
         max_len = max([f.padding_length for f in features])
-        if pad is None:
-            pad = tokenizer.eos_token_id
-            assert pad is not None, 'either pad_token_id or eos_token_id should be provided'
         
         input_ids = my_pad_sequence(
             [torch.tensor(f.input_ids, dtype=torch.long) for f in features],
@@ -122,7 +117,7 @@ class MyDataModule(L.LightningDataModule):
                 padding_value=pad
             )
         
-        strat_id = torch.tensor([f.labels[0] for f in features], dtype=torch.long) - len(tokenizer) + 8
+        strat_id = torch.tensor([f.labels[3] for f in features], dtype=torch.long) - len(tokenizer) + 8
         
         res = {
             'input_ids': input_ids,

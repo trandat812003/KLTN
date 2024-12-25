@@ -10,11 +10,8 @@ class Config:
     KNOWLEDGE_NAME = os.getenv("KNOWLEDGE_NAME")
     BASELINE = os.getenv("BASELINE")
     DATA_DIR = os.getenv("DATA_DIR")
-    _NUM_EPOCHS = int(os.getenv("NUM_EPOCHS"))
     BATCH_SIZE = int(os.getenv("BATCH_SIZE"))
     GRADIENT_ACCUMULATION_STEPS = int(os.getenv("GRADIENT_ACCUMULATION_STEPS"))
-    _MAX_INPUT_LENGTH = int(os.getenv("MAX_INPUT_LENGTH"))
-    _MAX_DECODER_INPUT_LENGTH = int(os.getenv("MAX_DECODER_INPUT_LENGTH"))
     _WANDB_NAME = None
 
     @classmethod
