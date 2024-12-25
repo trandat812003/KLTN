@@ -2,6 +2,11 @@ import os
 import pickle
 
 
+def create_folder(folder_name: str):
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+        return
+
 def read_file(file_name: str) -> list[str]:
     try:
         with open(file_name, 'r', encoding='utf-8') as f:
@@ -12,8 +17,7 @@ def read_file(file_name: str) -> list[str]:
 
 def load_file_pickle(root_file: str, file_name: str):
     if not os.path.exists(root_file):
-        os.makedirs(root_file)
-        return None, None
+        create_folder(folder_name=root_file)
 
     file_name = os.path.join(root_file, file_name)
     if not os.path.exists(file_name):
