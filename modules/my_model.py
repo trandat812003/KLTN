@@ -14,6 +14,9 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
         super().__init__(config)
         self.tokenizer: PreTrainedTokenizer = None
 
+        self.strategy_alpha = nn.Parameter(torch.tensor([0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]))
+        self.generation_strategy = None
+
     def forward(
         self,
         input_ids=None,
@@ -40,6 +43,22 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
 
         if kwargs.get('predict', None) is None:
             return lm_logits
+
+        if lm_logits.get_device() == -1:
+            device = 'cpu'
+        else:
+            device = 'cuda'
+
+        alpha_l = []
+
+        lm_size = lm_logits.size()
+        for i in self.generation_strategy:
+            tmp_alpha = self.strategy_alpha[i.item()]
+            tmp_alpha = tmp_alpha * torch.ones(lm_size[1], lm_size[2], device=device)
+            alpha_l.append(tmp_alpha)
+        alpha_l = torch.stack(alpha_l)
+
+        lm_logits = (torch.ones_like(lm_logits, device=device)+alpha_l)*lm_logits - alpha_l*lm_logits
 
         return Seq2SeqLMOutput(
             # loss=masked_lm_loss,
@@ -120,6 +139,7 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
         )
         lm_logits = self.lm_head(decoder_outputs.last_hidden_state) + self.final_logits_bias
         self.predict_strategy(lm_logits, encoded_info)
+        self.generation_strategy = encoded_info['pred_strat_id']
         
         if Config.KNOWLEDGE_NAME in ['sbert','graph']:
             if Config.DATA_NAME == 'esconv':

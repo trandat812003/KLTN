@@ -12,5 +12,5 @@ def cut_seq_to_eos(sentence, eos, remove_id=None):
     return sent
 
 
-def _norm(s: str) -> str:
+def norm(s: str) -> str:
     return ' '.join(s.strip().split())
