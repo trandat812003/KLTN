@@ -2,30 +2,27 @@ import torch
 import numpy as np
 import lightning as L
 import torch.nn.functional as F
-import numpy as np
+from transformers.tokenization_utils import PreTrainedTokenizer
 from transformers.optimization import AdamW, get_linear_schedule_with_warmup
-from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
-from sklearn.metrics import f1_score
 
-from libs.utils.get_model import get_model
-from libs.utils.get_tokenizer import get_tokenizer
-from libs.config import Config
+from libs.config import Config, Logging
 
+logging = Logging()
 
 class MyModule(L.LightningModule):
-    def __init__(self):
+    def __init__(self, tokenizer: PreTrainedTokenizer, model):
         super().__init__()
 
         print(self.device)
 
-        self.tokenizer = get_tokenizer()
-        self.model = get_model(self.device)
+        self.tokenizer = tokenizer
+        self.model = model
         self.model.tie_tokenizer(self.tokenizer)
 
         self.save_hyperparameters()
 
         self.model.to(self.device)
-        
+
         self.metrics = {
             "train": {"loss": 0.0, "steps": 0},
             "val": {"loss": 0.0, "steps": 0},
@@ -55,7 +52,12 @@ class MyModule(L.LightningModule):
         return masked_lm_loss / (Config.BATCH_SIZE * Config.GRADIENT_ACCUMULATION_STEPS / input_ids.shape[0])
     
     def training_step(self, batch, batch_idx):
-        return self.step(batch, batch_idx, "train")
+        loss = self.step(batch, batch_idx, "train")
+        logging.log({"train_epoch_loss": self.metrics['train']["loss"] / self.metrics['train']["steps"]})
+
+        current_lr = self.optimizers().param_groups[0]["lr"]
+        logging.log({"learning_rate": current_lr})
+        return loss
 
     def validation_step(self, batch, batch_idx):
         return self.step(batch, batch_idx, "val")
@@ -77,8 +79,8 @@ class MyModule(L.LightningModule):
         loss = metrics["loss"] / metrics["steps"]
         ppl = np.exp(loss)
 
-        self.log(f"{phase}_loss", loss, prog_bar=True)
-        self.log(f"{phase}_ppl", ppl, prog_bar=True)
+        logging.log({f"{phase}_loss": loss, f"{phase}_ppl": ppl})
+        logging.log_csv(self.current_epoch, phase, loss, ppl)
 
         metrics["loss"], metrics["steps"] = 0.0, 0
 
@@ -90,10 +92,12 @@ class MyModule(L.LightningModule):
             {"params": [p for n, p in param_optimizer if p.requires_grad and any(nd in n for nd in no_decay)], "weight_decay": 0.0}
         ]
 
-        optimizer = AdamW(optimizer_grouped_parameters, lr=1.5e-5)
-        num_optim_steps = 12300 * Config.NUM_EPOCHS // Config.BATCH_SIZE + 1 # len(data_train) = 12285
-        scheduler = get_linear_schedule_with_warmup(
-            optimizer, num_warmup_steps=100, num_training_steps=num_optim_steps
-        )
+        optimizer = AdamW(optimizer_grouped_parameters, lr=Config.lr)
+        # num_optim_steps = 12300 * Config.NUM_EPOCHS // Config.BATCH_SIZE + 1 # len(data_train) = 12285
+        # scheduler = get_linear_schedule_with_warmup(
+        #     optimizer, num_warmup_steps=1000, num_training_steps=num_optim_steps
+        # )
 
-        return [optimizer], [{"scheduler": scheduler, "interval": "step"}]
+        # return [optimizer], [{"scheduler": scheduler, "interval": "step"}]
+
+        return optimizer
