@@ -46,6 +46,7 @@ class MyDataModule(L.LightningDataModule):
             self.train_dataset,
             batch_size=self.BATCH_SIZE, 
             num_workers=self.num_workers,
+            shuffle=True,
             collate_fn=partial(MyDataModule.collate, tokenizer=self.tokenizer)
         )
 
