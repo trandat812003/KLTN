@@ -18,9 +18,10 @@ class Logging:
 
         self.csv_path = f'./logs_csv/{Config.BASELINE}/{Config.WANDB_NAME}.csv'
         create_folder(f'./logs_csv/{Config.BASELINE}')
-        with open(self.csv_path, "w", newline="") as file:
-            writer = csv.writer(file)
-            writer.writerow(["epoch", "phase", "loss", "ppl"])
+        if not os.path.exists(self.csv_path):
+            with open(self.csv_path, "w", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerow(["epoch", "phase", "loss", "ppl"])
 
     def log(self, d: dict):
         wandb.log(d)

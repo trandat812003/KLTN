@@ -15,8 +15,7 @@ class Config:
     GRADIENT_ACCUMULATION_STEPS = int(os.getenv("GRADIENT_ACCUMULATION_STEPS"))
     _MAX_INPUT_LENGTH = int(os.getenv("MAX_INPUT_LENGTH"))
     _MAX_DECODER_INPUT_LENGTH = int(os.getenv("MAX_DECODER_INPUT_LENGTH"))
-
-
+    _WANDB_NAME = None
 
     @classmethod
     @property
@@ -53,10 +52,3 @@ class Config:
         if 'pal' in cls.BASELINE:
             return 50
         return 40
-    
-    @classmethod
-    @property
-    def lr(cls):
-        if 'pal' in cls.BASELINE:
-            return 
-        return 3e-5
