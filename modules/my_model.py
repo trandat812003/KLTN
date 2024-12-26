@@ -18,7 +18,6 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
         self.persona_context_w = nn.Parameter(torch.tensor([1 / 3, 1 / 3, 1 / 3]))
         self.strategy_alpha = nn.Parameter(torch.tensor([0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]))
 
-        self.my_past = None
         self.generation_strategy = None
 
     def forward(
@@ -103,11 +102,10 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
             attention_mask=attention_mask,
             decoder_input_ids=decoder_input_ids,
             encoder_outputs=self.my_encoder_outputs,
-            past_key_values=self.my_past,
+            past_key_values=past_key_values,
             use_cache=use_cache,
             return_dict=return_dict,
         )
-        self.my_past = my_outputs.past_key_values
         my_logits = self.lm_head(my_outputs[0]) + self.final_logits_bias
 
         if lm_logits.get_device() == -1:
@@ -169,6 +167,25 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
             return_dict=True,
             **kwargs
     ):
+        kwargs.update({
+            'predict': True,
+            'other_res': {'acc_map': {'cls_strat_id': 'pred_strat_id'}, 'cls_strat_id': kwargs['strat_id']},
+            'max_length': Config.MAX_DECODER_INPUT_LENGTH,
+            'min_length': 10,
+            'do_sample': True,
+            'temperature': 0.5,
+            'top_k': 30,
+            'top_p': 0.9,
+            'num_beams': 1,
+            'num_return_sequences': 1,
+            'length_penalty': 1.0,
+            'repetition_penalty': 1.03,
+            'no_repeat_ngram_size': 0,
+            'encoder_no_repeat_ngram_size': 3,
+            'pad_token_id': self.tokenizer.pad_token_id if self.tokenizer.pad_token_id else self.tokenizer.eos_token_id,
+            'bos_token_id': self.tokenizer.bos_token_id if self.tokenizer.bos_token_id else  self.tokenizer.cls_token_id,
+            'eos_token_id': self.tokenizer.eos_token_id if self.tokenizer.eos_token_id else  self.tokenizer.sep_token_id,
+        })
         encoded_info = kwargs
         encoder_outputs = self.model.encoder(
             input_ids=input_ids,
