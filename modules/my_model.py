@@ -37,12 +37,14 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
 
         output_attentions = self.model.config.output_attentions
         output_hidden_states = self.model.config.output_hidden_states
+
+        breakpoint()
         
         encoder_outputs = self.model.encoder(
             input_ids=input_ids,
-            attention_mask=attention_mask,
-            output_attentions=output_attentions,
-            output_hidden_states=output_hidden_states,
+            # attention_mask=attention_mask,
+            # output_attentions=output_attentions,
+            # output_hidden_states=output_hidden_states,
             return_dict=return_dict,
         )
         persona_encoder_outputs = self.model.encoder(
@@ -93,10 +95,20 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
         )
 
         lm_logits = self.lm_head(outputs[0]) + self.final_logits_bias
-        
         if kwargs.get('predict', None) is None:
             return lm_logits
-        
+
+        outputs = self.model(
+            input_ids,
+            attention_mask=attention_mask,
+            decoder_input_ids=decoder_input_ids,
+            encoder_outputs=encoder_outputs,
+            past_key_values=past_key_values,
+            use_cache=use_cache,
+            return_dict=return_dict,
+        )
+        lm_logits = self.lm_head(outputs[0]) + self.final_logits_bias
+
         my_outputs = self.model(
             input_ids,
             attention_mask=attention_mask,
@@ -135,7 +147,7 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
             encoder_hidden_states=outputs.encoder_hidden_states,
             encoder_attentions=outputs.encoder_attentions,
         )
-    
+
     def predict_strategy(self, logits, encoded_info):
         assert not self.training
         strat_id = encoded_info.get('strat_id', None)
@@ -261,6 +273,7 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
         if kwargs['predict']: 
             models_kwargs = super(MyModel, self).prepare_inputs_for_generation(input_ids, **kwargs)
             models_kwargs.update({'predict': True})
+            models_kwargs.update({'input_ids': input_ids})
             return models_kwargs
         else:
             return super(MyModel, self).prepare_inputs_for_generation(input_ids, **kwargs)

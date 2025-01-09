@@ -31,7 +31,6 @@ class MyModule(L.LightningModule):
 
     def step(self, batch, batch_idx, phase):
         labels = batch.pop("labels")
-
         outputs = self.model(**batch)
         if phase == "val":
             labels[:, 0] = -100

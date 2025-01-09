@@ -34,8 +34,6 @@ class ESConvDataset(BaseDataset):
             if turn['speaker'] != 'sys':
                 text = process(norm("Persona:" + turn['text']))
                 user_number += 1
-            else:
-                text = process("System:") + [strat_id] + text
             
             if i > 0 and turn['speaker'] == 'sys' and (self.stage != 'test' or dialog[i - 1]['speaker'] != 'sys'):
                 if user_number > 2:
@@ -50,7 +48,7 @@ class ESConvDataset(BaseDataset):
                 persona = process(persona)
 
                 inputs.append({
-                    'context': context.copy() + [process("System:")],
+                    'context': context.copy(),
                     'knowledge': knowledge + heal,
                     'response': text,
                     'persona': persona,
@@ -60,6 +58,9 @@ class ESConvDataset(BaseDataset):
                     'context': [self.tokenizer.decode(c) for c in context.copy()],
                     'response': self.tokenizer.decode(text),
                 })
+
+            if turn['speaker'] == 'sys':
+                text = process("System:") + [strat_id] + text
 
             context = context + [text]
 

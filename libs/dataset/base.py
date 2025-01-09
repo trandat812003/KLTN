@@ -61,7 +61,7 @@ class BaseDataset(Dataset):
 
         labels = (response + [eos])[:self.max_decoder_input_length + 1]
         decoder_input_ids = [bos] + labels[:-1]
-        persona_input_ids = persona
+        persona_input_ids = persona[-self.max_input_length:]
 
         return InputFeature(input_ids, decoder_input_ids, labels, persona_input_ids)
     

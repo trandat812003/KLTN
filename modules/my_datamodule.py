@@ -24,8 +24,8 @@ class MyDataModule(L.LightningDataModule):
         elif Config.DATA_NAME == 'mi':
             MyDataset = MIDataset
 
-        self.train_dataset = MyDataset(tokenizer, stage="train")
-        self.test_dataset = MyDataset(tokenizer, stage="test")
+        self.train_dataset = MyDataset(tokenizer, stage="valid")
+        self.test_dataset = MyDataset(tokenizer, stage="valid")
         self.dev_dataset = MyDataset(tokenizer, "valid")
 
     def setup(self, stage: str):
@@ -84,8 +84,8 @@ class MyDataModule(L.LightningDataModule):
             [torch.tensor([1.] * f.input_length, dtype=torch.float) for f in features],
             batch_first=True, 
             max_len=max_len, 
-            padding_value=0.)
-
+            padding_value=0.
+        )
         persona_input_ids = my_pad_sequence(
             [torch.tensor(f.persona_input_ids, dtype=torch.long) for f in features],
             batch_first=True, 
@@ -98,26 +98,29 @@ class MyDataModule(L.LightningDataModule):
             max_len=max_len, 
             padding_value=0.
         )
-        labels = pad_sequence(
+        labels = my_pad_sequence(
             [torch.tensor(f.labels, dtype=torch.long) for f in features],
             batch_first=True, 
+            max_len=max_len,
             padding_value=-100
         )
         
         if not is_test:
-            decoder_input_ids = pad_sequence(
+            decoder_input_ids = my_pad_sequence(
                 [torch.tensor(f.decoder_input_ids, dtype=torch.long) for f in features],
                 batch_first=True,
+                max_len=max_len,
                 padding_value=pad
             )
         else:
-            decoder_input_ids = pad_sequence(
+            decoder_input_ids = my_pad_sequence(
                 torch.tensor([[f.decoder_input_ids[0]] for f in features], dtype=torch.long),
                 batch_first=True,
+                max_len=max_len,
                 padding_value=pad
             )
         
-        strat_id = torch.tensor([f.labels[3] for f in features], dtype=torch.long) - len(tokenizer) + 8
+        strat_id = torch.tensor([f.labels[0] for f in features], dtype=torch.long) - len(tokenizer) + 8
         
         res = {
             'input_ids': input_ids,
