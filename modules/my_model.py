@@ -38,67 +38,7 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
         output_attentions = self.model.config.output_attentions
         output_hidden_states = self.model.config.output_hidden_states
 
-        breakpoint()
-        
-        encoder_outputs = self.model.encoder(
-            input_ids=input_ids,
-            # attention_mask=attention_mask,
-            # output_attentions=output_attentions,
-            # output_hidden_states=output_hidden_states,
-            return_dict=return_dict,
-        )
-        persona_encoder_outputs = self.model.encoder(
-            input_ids=persona_input_ids,
-            attention_mask=persona_attention_mask,
-            output_attentions=output_attentions,
-            output_hidden_states=output_hidden_states,
-            return_dict=return_dict,
-        )
-
-        context = torch.stack(
-            [torch.matmul(torch.softmax(torch.matmul(j, i.t()), dim=-1), i) 
-                for i, j in zip(encoder_outputs[0], persona_encoder_outputs[0])]
-        )
-        persona = torch.stack(
-            [torch.matmul(torch.softmax(torch.matmul(i, j.t()), dim=-1), j) 
-                for i, j in zip(encoder_outputs[0], persona_encoder_outputs[0])]
-        )
-        context = self.personanorm(context + persona_encoder_outputs.last_hidden_state)
-        persona = self.contextnorm(encoder_outputs.last_hidden_state + persona)
-
-        w1 = torch.exp(self.persona_context_w[0]) / torch.sum(torch.exp(self.persona_context_w))
-        w2 = torch.exp(self.persona_context_w[1]) / torch.sum(torch.exp(self.persona_context_w))
-        w3 = torch.exp(self.persona_context_w[2]) / torch.sum(torch.exp(self.persona_context_w))
-
-        encoder_outputs.last_hidden_state = w1 * encoder_outputs.last_hidden_state + w2 * context + w3 * persona
-
-        decoder_outputs = self.model.decoder(
-            input_ids=decoder_input_ids,
-            encoder_hidden_states=encoder_outputs[0],
-            encoder_attention_mask=attention_mask,
-            past_key_values=past_key_values,
-            use_cache=use_cache,
-            output_attentions=output_attentions,
-            output_hidden_states=output_hidden_states,
-            return_dict=return_dict,
-        )
-
-        outputs = Seq2SeqModelOutput(
-            last_hidden_state=decoder_outputs.last_hidden_state,
-            past_key_values=decoder_outputs.past_key_values,
-            decoder_hidden_states=decoder_outputs.hidden_states,
-            decoder_attentions=decoder_outputs.attentions,
-            cross_attentions=decoder_outputs.cross_attentions,
-            encoder_last_hidden_state=encoder_outputs.last_hidden_state,
-            encoder_hidden_states=encoder_outputs.hidden_states,
-            encoder_attentions=encoder_outputs.attentions,
-        )
-
-        lm_logits = self.lm_head(outputs[0]) + self.final_logits_bias
-        if kwargs.get('predict', None) is None:
-            return lm_logits
-
-        outputs = self.model(
+        my_outputs = self.model(
             input_ids,
             attention_mask=attention_mask,
             decoder_input_ids=decoder_input_ids,
@@ -107,46 +47,107 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
             use_cache=use_cache,
             return_dict=return_dict,
         )
-        lm_logits = self.lm_head(outputs[0]) + self.final_logits_bias
 
-        my_outputs = self.model(
-            input_ids,
-            attention_mask=attention_mask,
-            decoder_input_ids=decoder_input_ids,
-            encoder_outputs=self.my_encoder_outputs,
-            past_key_values=past_key_values,
-            use_cache=use_cache,
-            return_dict=return_dict,
-        )
         my_logits = self.lm_head(my_outputs[0]) + self.final_logits_bias
+        
+        if kwargs.get('predict', None) is None:
+            encoder_outputs = self.model.encoder(
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+                output_attentions=output_attentions,
+                output_hidden_states=output_hidden_states,
+                return_dict=return_dict,
+            )
+            persona_encoder_outputs = self.model.encoder(
+                input_ids=persona_input_ids,
+                attention_mask=persona_attention_mask,
+                output_attentions=output_attentions,
+                output_hidden_states=output_hidden_states,
+                return_dict=return_dict,
+            )
 
-        if lm_logits.get_device() == -1:
-            device = 'cpu'
+            context = torch.stack(
+                [torch.matmul(torch.softmax(torch.matmul(j, i.t()), dim=-1), i) 
+                    for i, j in zip(encoder_outputs[0], persona_encoder_outputs[0])]
+            )
+            persona = torch.stack(
+                [torch.matmul(torch.softmax(torch.matmul(i, j.t()), dim=-1), j) 
+                    for i, j in zip(encoder_outputs[0], persona_encoder_outputs[0])]
+            )
+            context = self.personanorm(context + persona_encoder_outputs.last_hidden_state)
+            persona = self.contextnorm(encoder_outputs.last_hidden_state + persona)
+
+            w1 = torch.exp(self.persona_context_w[0]) / torch.sum(torch.exp(self.persona_context_w))
+            w2 = torch.exp(self.persona_context_w[1]) / torch.sum(torch.exp(self.persona_context_w))
+            w3 = torch.exp(self.persona_context_w[2]) / torch.sum(torch.exp(self.persona_context_w))
+
+            encoder_outputs.last_hidden_state = w1 * encoder_outputs.last_hidden_state + w2 * context + w3 * persona
+
+            decoder_outputs = self.model.decoder(
+                input_ids=decoder_input_ids,
+                encoder_hidden_states=encoder_outputs[0],
+                encoder_attention_mask=attention_mask,
+                past_key_values=past_key_values,
+                use_cache=use_cache,
+                output_attentions=output_attentions,
+                output_hidden_states=output_hidden_states,
+                return_dict=return_dict,
+            )
+
+            outputs = Seq2SeqModelOutput(
+                last_hidden_state=decoder_outputs.last_hidden_state,
+                past_key_values=decoder_outputs.past_key_values,
+                decoder_hidden_states=decoder_outputs.hidden_states,
+                decoder_attentions=decoder_outputs.attentions,
+                cross_attentions=decoder_outputs.cross_attentions,
+                encoder_last_hidden_state=encoder_outputs.last_hidden_state,
+                encoder_hidden_states=encoder_outputs.hidden_states,
+                encoder_attentions=encoder_outputs.attentions,
+            )
+
+            lm_logits = self.lm_head(outputs[0]) + self.final_logits_bias
+            strat_ids = kwargs.get('strat_id', None)
+
+            self.cal_strategy(strat_ids, lm_logits=lm_logits, my_logits=my_logits)
+        
+            return lm_logits
         else:
-            device = 'cuda'
+            outputs = self.model(
+                input_ids,
+                attention_mask=attention_mask,
+                decoder_input_ids=decoder_input_ids,
+                encoder_outputs=encoder_outputs,
+                past_key_values=past_key_values,
+                use_cache=use_cache,
+                return_dict=return_dict,
+            )
+            lm_logits = self.lm_head(outputs[0]) + self.final_logits_bias
 
+            self.cal_strategy(self.generation_strategy, lm_logits=lm_logits, my_logits=my_logits)
+
+            return Seq2SeqLMOutput(
+                # loss=masked_lm_loss,
+                logits=lm_logits,
+                past_key_values=outputs.past_key_values,
+                decoder_hidden_states=outputs.decoder_hidden_states,
+                decoder_attentions=outputs.decoder_attentions,
+                cross_attentions=outputs.cross_attentions,
+                encoder_last_hidden_state=outputs.encoder_last_hidden_state,
+                encoder_hidden_states=outputs.encoder_hidden_states,
+                encoder_attentions=outputs.encoder_attentions,
+            )
+        
+    def cal_strategy(self, strat_ids, lm_logits, my_logits):
         alpha_l = []
-
         lm_size = lm_logits.size()
-        for i in self.generation_strategy:
+        for i in strat_ids:
             tmp_alpha = self.strategy_alpha[i.item()]
-            tmp_alpha = tmp_alpha * torch.ones(lm_size[1], lm_size[2], device=device)
+            tmp_alpha = tmp_alpha * torch.ones(lm_size[1], lm_size[2], device=self.device)
             alpha_l.append(tmp_alpha)
         alpha_l = torch.stack(alpha_l)
+        lm_logits = (torch.ones_like(lm_logits, device=self.device) + alpha_l) * lm_logits - alpha_l * my_logits
 
-        lm_logits = (torch.ones_like(lm_logits, device=device)+alpha_l)*lm_logits - alpha_l*my_logits
-
-        return Seq2SeqLMOutput(
-            # loss=masked_lm_loss,
-            logits=lm_logits,
-            past_key_values=outputs.past_key_values,
-            decoder_hidden_states=outputs.decoder_hidden_states,
-            decoder_attentions=outputs.decoder_attentions,
-            cross_attentions=outputs.cross_attentions,
-            encoder_last_hidden_state=outputs.encoder_last_hidden_state,
-            encoder_hidden_states=outputs.encoder_hidden_states,
-            encoder_attentions=outputs.encoder_attentions,
-        )
+        return lm_logits
 
     def predict_strategy(self, logits, encoded_info):
         assert not self.training
@@ -273,7 +274,6 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
         if kwargs['predict']: 
             models_kwargs = super(MyModel, self).prepare_inputs_for_generation(input_ids, **kwargs)
             models_kwargs.update({'predict': True})
-            models_kwargs.update({'input_ids': input_ids})
             return models_kwargs
         else:
             return super(MyModel, self).prepare_inputs_for_generation(input_ids, **kwargs)

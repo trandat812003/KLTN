@@ -19,6 +19,13 @@ class Config:
 
     @classmethod
     @property
+    def strat_id(cls):
+        if 'pal' in cls.BASELINE:
+            return 3
+        return 0
+
+    @classmethod
+    @property
     def DATA_NAME(cls):
         if cls._DATA_NAME is None:
             cls._DATA_NAME = 'esconv'

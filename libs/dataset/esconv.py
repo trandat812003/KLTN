@@ -52,10 +52,11 @@ class ESConvDataset(BaseDataset):
                     'knowledge': knowledge + heal,
                     'response': text,
                     'persona': persona,
+                    'strat_id': strat_id,
                 })
 
                 self.inputs.append({
-                    'context': [self.tokenizer.decode(c) for c in context.copy()],
+                    'context': [self.tokenizer.decode(c) for c in context],
                     'response': self.tokenizer.decode(text),
                 })
 

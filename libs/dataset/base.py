@@ -47,7 +47,7 @@ class BaseDataset(Dataset):
         features = [self._featurize(**ipt) for ipt in inputs]
         return features
     
-    def _featurize(self, context: list, persona, knowledge: list, response) -> InputFeature:
+    def _featurize(self, context: list, strat_id, persona, knowledge: list, response) -> InputFeature:
         pad = self.tokenizer.pad_token_id or self.tokenizer.eos_token_id
         bos = self.tokenizer.bos_token_id or self.tokenizer.cls_token_id
         eos = self.tokenizer.eos_token_id or self.tokenizer.sep_token_id
@@ -63,7 +63,7 @@ class BaseDataset(Dataset):
         decoder_input_ids = [bos] + labels[:-1]
         persona_input_ids = persona[-self.max_input_length:]
 
-        return InputFeature(input_ids, decoder_input_ids, labels, persona_input_ids)
+        return InputFeature(input_ids, decoder_input_ids, labels, persona_input_ids, strat_id)
     
     def __len__(self) -> int:
         return len(self.data_list)
