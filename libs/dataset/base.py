@@ -62,7 +62,7 @@ class BaseDataset(Dataset):
 
         assert len(decoder_input_ids) == len(labels), "Mismatch between decoder inputs and labels"
 
-        return InputFeature(input_ids, decoder_input_ids, labels)
+        return InputFeature(input_ids, decoder_input_ids, labels, strat_id)
     
     def __len__(self) -> int:
         return len(self.data_list)

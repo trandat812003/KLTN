@@ -1,7 +1,8 @@
 class InputFeature(object):
-    def __init__(self, input_ids, decoder_input_ids, labels):
+    def __init__(self, input_ids, decoder_input_ids, labels, strat_id):
         self.input_ids = input_ids
         self.input_length = len(input_ids)
+        self.strat_id = strat_id
 
         self.decoder_input_ids = decoder_input_ids
         self.decoder_input_length = len(decoder_input_ids)

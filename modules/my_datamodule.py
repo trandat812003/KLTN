@@ -105,18 +105,7 @@ class MyDataModule(L.LightningDataModule):
             
         
         if Config.DATA_NAME == 'esconv':
-            strat_id = torch.tensor([f.labels[0] for f in features], dtype=torch.long) - len(tokenizer) + 8
-        elif Config.DATA_NAME == 'mi':
-            strat_id = torch.tensor([f.labels[0] for f in features], dtype=torch.long) - len(tokenizer) + 10
-        
-        if Config.KNOWLEDGE_NAME == 'basic':
-            strat_id += 5
-        elif Config.KNOWLEDGE_NAME == 'bm25':
-            strat_id += 1
-        elif Config.KNOWLEDGE_NAME == 'oracle':
-            strat_id += 6
-        elif Config.KNOWLEDGE_NAME in ['sbert','graph']:
-            strat_id += 8
+            strat_id = torch.tensor([f.strat_id for f in features], dtype=torch.long)
         
         res = {
             'input_ids': input_ids,

@@ -41,6 +41,10 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
         )
         lm_logits = self.lm_head(outputs[0]) + self.final_logits_bias
 
+        strat_ids = kwargs.get('strat_id', None)
+
+        self.cal_strategy(strat_ids, lm_logits=lm_logits, my_logits=lm_logits)
+
         if kwargs.get('predict', None) is None:
             return lm_logits
 
@@ -56,8 +60,20 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
             encoder_attentions=outputs.encoder_attentions,
         )
     
+    def cal_strategy(self, strat_ids, lm_logits, my_logits):
+        alpha_l = []
+        lm_size = lm_logits.size()
+        for i in strat_ids:
+            tmp_alpha = self.strategy_alpha[i.item()]
+            tmp_alpha = tmp_alpha * torch.ones(lm_size[1], lm_size[2], device=self.device)
+            alpha_l.append(tmp_alpha)
+        alpha_l = torch.stack(alpha_l)
+        lm_logits = (torch.ones_like(lm_logits, device=self.device) + alpha_l) * lm_logits - alpha_l * my_logits
+
+        return lm_logits
+    
     def predict_strategy(self, logits, encoded_info):
-        strat_id = encoded_info.pop('strat_id')
+        strat_id = encoded_info.get('strat_id', None)
         if Config.KNOWLEDGE_NAME in ['sbert','graph']:
             if Config.DATA_NAME == 'esconv':
                 logits = logits[:, 0, -16:-8]
