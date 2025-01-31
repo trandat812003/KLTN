@@ -13,6 +13,7 @@ from libs.utils.get_model import get_model
 from libs.utils.utils import cut_seq_to_eos, norm
 from libs.metric.metrics import Metric
 from libs.config import Config, Logging
+from libs.utils.aug import aug
 
 logging = Logging()
 
@@ -21,6 +22,7 @@ datamodule = MyDataModule(tokenizer=tokenizer)
 model = get_model("cpu")
 module = MyModule(tokenizer, model)
 
+aug(tokenizer=tokenizer, model=model)
 
 trainer = Trainer(
     max_epochs=Config.NUM_EPOCHS, 
