@@ -1,13 +1,11 @@
-pretrained_model_path: ./.cache/Blenderbot_small-90M
+# pretrained_model_path: ./.cache/augesc
+# pretrained_model_path: ./.cache/Blenderbot_small-90M
+# pretrained_model_path: Qwen/Qwen2.5-1.5B
 custom_config_path: null
 gradient_checkpointing: false
 
 expanded_vocab_data:
   esconv:
-    - "</s>"
-    - "<s>"
-    - "<persona>"
-    - "<input>"
     - "[Question]"
     - "[Restatement or Paraphrasing]"
     - "[Reflection of feelings]"

@@ -15,6 +15,7 @@ class Logging:
                 "epochs": Config.NUM_EPOCHS,
             },
         )
+        #58bfd6403a8f96bd35e09d284fc38f5aae23604f
 
         self.csv_path = f'./logs_csv/{Config.BASELINE}/{Config.WANDB_NAME}.csv'
         create_folder(f'./logs_csv/{Config.BASELINE}')
