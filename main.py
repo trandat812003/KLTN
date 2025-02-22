@@ -20,7 +20,7 @@ logging = Logging()
 
 tokenizer = get_tokenizer()
 datamodule = MyDataModule(tokenizer=tokenizer)
-model = get_model("cpu")
+model = get_model("cuda")
 module = MyModule(tokenizer, model)
 
 # aug(tokenizer=tokenizer, model=model)
@@ -28,7 +28,10 @@ module = MyModule(tokenizer, model)
 trainer = Trainer(
     max_epochs=Config.NUM_EPOCHS, 
     gradient_clip_val=Config.GRADIENT_ACCUMULATION_STEPS,
-    accelerator="cpu",
+    accelerator='gpu',
+    devices=[0, 1, 2], 
+    strategy='ddp',
+    precision='bf16-true'
 )
 trainer.fit(module, datamodule=datamodule)
 

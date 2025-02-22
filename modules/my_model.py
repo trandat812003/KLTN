@@ -14,7 +14,6 @@ class MyModel(BlenderbotForConditionalGeneration):
     def __init__(self, config: BlenderbotConfig):
         super().__init__(config)
         self.tokenizer: PreTrainedTokenizer = None
-        self.device = None
     
     @torch.no_grad()
     def generate(
@@ -60,13 +59,15 @@ class MyModel(BlenderbotForConditionalGeneration):
         alpha_l = []
 
         lm_size = lm_logits.size()
-        for i in self.generation_strategy:
+        strat_id = kwargs.pop("strat_id")
+        for i in strat_id:
+            # breakpoint()
             tmp_alpha = self.strategy_alpha[i.item()]
-            tmp_alpha = tmp_alpha * torch.ones(lm_size[1], lm_size[2], device=self.device)
+            tmp_alpha = tmp_alpha * torch.ones(lm_size[1], lm_size[2])
             alpha_l.append(tmp_alpha)
         alpha_l = torch.stack(alpha_l)
 
-        lm_logits = (torch.ones_like(lm_logits, device=self.device)+alpha_l)*lm_logits - alpha_l*lm_logits
+        lm_logits = (torch.ones_like(lm_logits)+alpha_l)*lm_logits - alpha_l*lm_logits
 
         if Config.KNOWLEDGE_NAME in ['sbert','graph']:
             if Config.DATA_NAME == 'esconv':
