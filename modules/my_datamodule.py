@@ -43,7 +43,7 @@ class MyDataModule(L.LightningDataModule):
 
     def train_dataloader(self):
         return DataLoader(
-            self.train_dataset,
+            self.train_dataset[1:4],
             batch_size=self.BATCH_SIZE, 
             num_workers=self.num_workers,
             shuffle=True,
@@ -52,7 +52,7 @@ class MyDataModule(L.LightningDataModule):
 
     def val_dataloader(self):
         return DataLoader(
-            self.dev_dataset,
+            self.dev_dataset[1:4],
             batch_size=self.BATCH_SIZE, 
             num_workers=self.num_workers,
             collate_fn=partial(MyDataModule.collate, tokenizer=self.tokenizer)
@@ -68,7 +68,7 @@ class MyDataModule(L.LightningDataModule):
 
     def predict_dataloader(self):
         return DataLoader(
-            self.dev_dataset,
+            self.test_dataset[1:20],
             batch_size=self.BATCH_SIZE, 
             num_workers=self.num_workers,
             collate_fn=partial(MyDataModule.collate, tokenizer=self.tokenizer, is_test=True)
@@ -88,19 +88,20 @@ class MyDataModule(L.LightningDataModule):
             batch_first=True, 
             padding_value=0.
         )
-        labels = pad_sequence(
-            [torch.tensor(f.labels, dtype=torch.long) for f in features],
-            batch_first=True, 
-            padding_value=-100
-        )
         
         if is_test:
             decoder_input_ids = torch.tensor([[f.decoder_input_ids[0]] for f in features], dtype=torch.long)
+            labels = None
         else:
             decoder_input_ids = pad_sequence(
                 [torch.tensor(f.decoder_input_ids, dtype=torch.long) for f in features],
                 batch_first=True, 
                 padding_value=pad
+            )
+            labels = pad_sequence(
+                [torch.tensor(f.labels, dtype=torch.long) for f in features],
+                batch_first=True, 
+                padding_value=-100
             )
             
         

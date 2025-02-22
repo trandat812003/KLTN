@@ -16,7 +16,7 @@ class BaseDataset(Dataset):
 
     def setup(self) -> None:
         self.data_list, self.inputs = load_file_pickle(
-            root_file=f'./.cache/dataset/{Config.DATA_NAME}.{Config.BASELINE}',
+            root_file=f'./.cache/dataset/{Config.DATA_NAME}',
             file_name=f'{self.stage}.pkl'
         )
 
@@ -25,7 +25,7 @@ class BaseDataset(Dataset):
         
         self.data_list = []
         self.inputs = []
-        reader = read_file(f'./dataset/{Config.DATA_NAME}/{Config.BASELINE}/{self.stage}.txt')
+        reader = read_file(f'./dataset/{Config.DATA_NAME}/{self.stage}.txt')
 
         for line in reader:
             data = json.loads(line)
@@ -34,7 +34,7 @@ class BaseDataset(Dataset):
             self.data_list.extend(features)
 
         save_file_pickle(
-            f'./.cache/dataset/{Config.DATA_NAME}.{Config.BASELINE}/{self.stage}.pkl',
+            f'./.cache/dataset/{Config.DATA_NAME}/{self.stage}.pkl',
             {'data_list': self.data_list, 'inputs': self.inputs}
         )
 

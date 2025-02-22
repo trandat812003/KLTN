@@ -17,11 +17,12 @@ class MyModule(L.LightningModule):
 
         self.tokenizer = tokenizer
         self.model = model
+        self.model.device = self.device
         self.model.tie_tokenizer(self.tokenizer)
 
-        self.save_hyperparameters()
+        self.save_hyperparameters(ignore=['model'])
 
-        self.model.to(self.device)
+        # self.model.to(self.device)
 
         self.metrics = {
             "train": {"loss": 0.0, "steps": 0},
@@ -32,10 +33,21 @@ class MyModule(L.LightningModule):
     def step(self, batch, batch_idx, phase):
         labels = batch.pop("labels")
 
-        outputs = self.model(**batch)
+        outputs = self.model(**batch, predict = False)
         if phase == "val":
             labels[:, 0] = -100
             outputs = outputs[..., :self.tokenizer.vocab_size].contiguous()
+        else:
+            alpha_l = []
+
+            lm_size = outputs.size()
+            for i in batch["strat_id"]:
+                tmp_alpha = self.model.strategy_alpha[i.item()]
+                tmp_alpha = tmp_alpha * torch.ones(lm_size[1], lm_size[2], device=self.device)
+                alpha_l.append(tmp_alpha)
+            alpha_l = torch.stack(alpha_l)
+
+            outputs = (torch.ones_like(outputs, device=self.device)+alpha_l)*outputs - alpha_l*outputs
 
         loss = F.cross_entropy(outputs.view(-1, outputs.size(-1)), labels.view(-1), reduction="none")
         loss = loss.view(labels.size(0), labels.size(1))
@@ -62,22 +74,16 @@ class MyModule(L.LightningModule):
     def validation_step(self, batch, batch_idx):
         return self.step(batch, batch_idx, "val")
 
-    def test_step(self, batch, batch_idx):
-        return self.step(batch, batch_idx, "test")
-
     def on_train_epoch_end(self):
         self.on_epoch_end("train")
 
     def on_validation_epoch_end(self):
         self.on_epoch_end("val")
 
-    def on_test_epoch_end(self):
-        self.on_epoch_end("test")
-
     def on_epoch_end(self, phase):
         metrics = self.metrics[phase]
         loss = metrics["loss"] / metrics["steps"]
-        ppl = np.exp(loss)
+        ppl = np.exp(loss.item())
 
         logging.log({f"{phase}_loss": loss, f"{phase}_ppl": ppl})
         logging.log_csv(self.current_epoch, phase, loss, ppl)
@@ -93,11 +99,11 @@ class MyModule(L.LightningModule):
         ]
 
         optimizer = AdamW(optimizer_grouped_parameters, lr=Config.lr)
-        # num_optim_steps = 12300 * Config.NUM_EPOCHS // Config.BATCH_SIZE + 1 # len(data_train) = 12285
-        # scheduler = get_linear_schedule_with_warmup(
-        #     optimizer, num_warmup_steps=1000, num_training_steps=num_optim_steps
-        # )
+        num_optim_steps = 12300 * Config.NUM_EPOCHS // Config.BATCH_SIZE + 1 # len(data_train) = 12285
+        scheduler = get_linear_schedule_with_warmup(
+            optimizer, num_warmup_steps=100, num_training_steps=num_optim_steps
+        )
 
-        # return [optimizer], [{"scheduler": scheduler, "interval": "step"}]
+        return [optimizer], [{"scheduler": scheduler, "interval": "step"}]
 
-        return optimizer
+        # return optimizer

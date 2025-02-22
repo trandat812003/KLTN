@@ -10,32 +10,6 @@ from libs.config import Config
 class AugDataset(BaseDataset):
     def __init__(self, tokenizer: PreTrainedTokenizer, stage: str) -> None:
         super().__init__(tokenizer, stage)
-        self.data_list = []
-        self.inputs = []
-
-    def setup(self) -> None:
-        self.data_list, self.inputs = load_file_pickle(
-            root_file=f'./.cache/dataset/aug_dataset',
-            file_name=f'augesc.pkl'
-        )
-
-        if self.data_list is not None:
-            return
-        
-        self.data_list = []
-        self.inputs = []
-        reader = read_file(f'./data_aug/augesc.txt')
-
-        for line in reader:
-            data = json.loads(line)
-            inputs = self._convert_data_to_inputs(data)
-            features = self._convert_inputs_to_features(inputs)
-            self.data_list.extend(features)
-
-        save_file_pickle(
-            f'./.cache/dataset/aug_dataset/augesc.pkl',
-            self.data_list
-        )
 
     def _convert_data_to_inputs(self, data: list) -> list[dict]:
         process = lambda x: self.tokenizer.convert_tokens_to_ids(self.tokenizer.tokenize(x))

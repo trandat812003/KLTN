@@ -3,97 +3,18 @@ import torch.nn as nn
 import torch.nn.functional as F
 from transformers import PreTrainedTokenizer
 from transformers.modeling_outputs import Seq2SeqModelOutput
-from transformers.models.blenderbot_small import (BlenderbotSmallConfig, BlenderbotSmallForConditionalGeneration)
+# from transformers.models.blenderbot_small import (BlenderbotSmallConfig, BlenderbotSmallForConditionalGeneration)
+from transformers.models.blenderbot import (BlenderbotConfig, BlenderbotForConditionalGeneration)
 from transformers.modeling_outputs import Seq2SeqLMOutput
-from typing import Any, Dict
+from typing import List, Optional, Tuple, Union
 from libs.config import Config
 
 
-class MyModel(BlenderbotSmallForConditionalGeneration):
-    def __init__(self, config: BlenderbotSmallConfig):
+class MyModel(BlenderbotForConditionalGeneration):
+    def __init__(self, config: BlenderbotConfig):
         super().__init__(config)
         self.tokenizer: PreTrainedTokenizer = None
-
-        self.strategy_alpha = nn.Parameter(torch.tensor([0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]))
-        self.generation_strategy = None
-
-    def forward(
-        self,
-        input_ids=None,
-        attention_mask=None,
-        decoder_input_ids=None,
-        encoder_outputs=None,
-        past_key_values=None,
-        use_cache=True,
-        return_dict=True,
-        **kwargs
-    ):
-        assert self.tokenizer is not None
-
-        outputs = self.model(
-            input_ids,
-            attention_mask=attention_mask,
-            decoder_input_ids=decoder_input_ids,
-            encoder_outputs=encoder_outputs,
-            past_key_values=past_key_values,
-            use_cache=use_cache,
-            return_dict=return_dict,
-        )
-        lm_logits = self.lm_head(outputs[0]) + self.final_logits_bias
-
-        if kwargs.get('predict', None) is None:
-            return lm_logits
-
-        if lm_logits.get_device() == -1:
-            device = 'cpu'
-        else:
-            device = 'cuda'
-
-        alpha_l = []
-
-        lm_size = lm_logits.size()
-        for i in self.generation_strategy:
-            tmp_alpha = self.strategy_alpha[i.item()]
-            tmp_alpha = tmp_alpha * torch.ones(lm_size[1], lm_size[2], device=device)
-            alpha_l.append(tmp_alpha)
-        alpha_l = torch.stack(alpha_l)
-
-        lm_logits = (torch.ones_like(lm_logits, device=device)+alpha_l)*lm_logits - alpha_l*lm_logits
-
-        return Seq2SeqLMOutput(
-            # loss=masked_lm_loss,
-            logits=lm_logits,
-            past_key_values=outputs.past_key_values,
-            decoder_hidden_states=outputs.decoder_hidden_states,
-            decoder_attentions=outputs.decoder_attentions,
-            cross_attentions=outputs.cross_attentions,
-            encoder_last_hidden_state=outputs.encoder_last_hidden_state,
-            encoder_hidden_states=outputs.encoder_hidden_states,
-            encoder_attentions=outputs.encoder_attentions,
-        )
-    
-    def predict_strategy(self, logits, encoded_info):
-        strat_id = encoded_info.pop('strat_id')
-        if Config.KNOWLEDGE_NAME in ['sbert','graph']:
-            if Config.DATA_NAME == 'esconv':
-                logits = logits[:, 0, -16:-8]
-            elif Config.DATA_NAME == 'mi':
-                logits = logits[:, 0, -18:-8]
-    
-        if strat_id is not None:
-            pred = strat_id
-        else:
-            pred = torch.argmax(logits, dim=-1)
-        
-        pred_top1 = torch.topk(logits, k=1, dim=-1)[1]
-        pred_top3 = torch.topk(logits, k=3, dim=-1)[1]
-    
-        encoded_info.update({
-            'pred_strat_id': pred,
-            'pred_strat_id_top1': pred_top1,
-            'pred_strat_id_top3': pred_top3,
-            'pred_strat_id_dist': F.softmax(logits, dim=-1)
-        })
+        self.device = None
     
     @torch.no_grad()
     def generate(
@@ -105,8 +26,6 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
         **kwargs
     ):
         kwargs.update({
-            'predict': True,
-            'other_res': {'acc_map': {'cls_strat_id': 'pred_strat_id'}, 'cls_strat_id': kwargs['strat_id']},
             'max_length': Config.MAX_INPUT_LENGTH,
             'min_length': 15,
             'do_sample': True,
@@ -138,14 +57,30 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
             return_dict=return_dict,
         )
         lm_logits = self.lm_head(decoder_outputs.last_hidden_state) + self.final_logits_bias
-        self.predict_strategy(lm_logits, encoded_info)
-        self.generation_strategy = encoded_info['pred_strat_id']
+        alpha_l = []
+
+        lm_size = lm_logits.size()
+        for i in self.generation_strategy:
+            tmp_alpha = self.strategy_alpha[i.item()]
+            tmp_alpha = tmp_alpha * torch.ones(lm_size[1], lm_size[2], device=self.device)
+            alpha_l.append(tmp_alpha)
+        alpha_l = torch.stack(alpha_l)
+
+        lm_logits = (torch.ones_like(lm_logits, device=self.device)+alpha_l)*lm_logits - alpha_l*lm_logits
+
+        if Config.KNOWLEDGE_NAME in ['sbert','graph']:
+            if Config.DATA_NAME == 'esconv':
+                logits = lm_logits[:, 0, -16:-8]
+            elif Config.DATA_NAME == 'mi':
+                logits = lm_logits[:, 0, -18:-8]
+    
+        pred = torch.argmax(logits, dim=-1)
         
         if Config.KNOWLEDGE_NAME in ['sbert','graph']:
             if Config.DATA_NAME == 'esconv':
-                decoder_input_ids = torch.cat([decoder_input_ids, encoded_info['pred_strat_id'][..., None] + len(self.tokenizer) - 16], dim=-1)
+                decoder_input_ids = torch.cat([decoder_input_ids, pred[..., None] + len(self.tokenizer) - 16], dim=-1)
             elif Config.DATA_NAME == 'mi':
-                decoder_input_ids = torch.cat([decoder_input_ids, encoded_info['pred_strat_id'][..., None] + len(self.tokenizer) - 18], dim=-1)
+                decoder_input_ids = torch.cat([decoder_input_ids, pred[..., None] + len(self.tokenizer) - 18], dim=-1)
         
         kwargs['max_length'] = Config.MAX_INPUT_LENGTH + decoder_input_ids.size(1)
         kwargs['use_cache'] = True
@@ -161,18 +96,6 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
             **kwargs
         )
         return encoded_info, generations[:, decoder_input_ids.size(1):]
-    
-    def prepare_inputs_for_generation(self, input_ids, **kwargs) -> Dict[str, Any]:
-        """
-        Implement in subclasses of :class:`~transformers.PreTrainedModel` for custom behavior to prepare inputs in the
-        generate method.
-        """
-        if kwargs['predict']: 
-            models_kwargs = super(MyModel, self).prepare_inputs_for_generation(input_ids, **kwargs)
-            models_kwargs.update({'predict': True})
-            return models_kwargs
-        else:
-            return super(MyModel, self).prepare_inputs_for_generation(input_ids, **kwargs)
 
     def tie_tokenizer(self, tokenizer: PreTrainedTokenizer):
         self.tokenizer = tokenizer

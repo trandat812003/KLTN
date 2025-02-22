@@ -15,6 +15,7 @@ from libs.metric.metrics import Metric
 from libs.config import Config, Logging
 from libs.utils.aug import aug
 
+torch.set_float32_matmul_precision('high')
 logging = Logging()
 
 tokenizer = get_tokenizer()
@@ -22,7 +23,7 @@ datamodule = MyDataModule(tokenizer=tokenizer)
 model = get_model("cpu")
 module = MyModule(tokenizer, model)
 
-aug(tokenizer=tokenizer, model=model)
+# aug(tokenizer=tokenizer, model=model)
 
 trainer = Trainer(
     max_epochs=Config.NUM_EPOCHS, 

@@ -1,3 +1,4 @@
+import os
 import torch
 import torch.nn.functional as F
 from functools import partial
@@ -10,7 +11,7 @@ from tqdm import tqdm
 
 
 def aug(tokenizer, model):
-    aug_dataset = AugDataset(tokenizer, stage="aug")
+    aug_dataset = AugDataset(tokenizer, stage="augesc")
     aug_dataset.setup()
 
     aug_dataloader = DataLoader(
@@ -44,6 +45,10 @@ def aug(tokenizer, model):
         loss = masked_lm_loss / (Config.BATCH_SIZE * Config.GRADIENT_ACCUMULATION_STEPS / batch["input_ids"].shape[0])
         loss.backward()
         optimizer.step()
+
+    checkpoint_path = "./augmented_model.pt"
+    torch.save(model.state_dict(), checkpoint_path)
+    print(f"Checkpoint saved at {checkpoint_path}")
 
     del aug_dataloader
     del aug_dataset
