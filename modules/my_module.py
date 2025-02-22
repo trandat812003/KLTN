@@ -17,7 +17,6 @@ class MyModule(L.LightningModule):
 
         self.tokenizer = tokenizer
         self.model = model
-        self.model.device = self.device
         self.model.tie_tokenizer(self.tokenizer)
 
         self.save_hyperparameters(ignore=['model'])
@@ -31,9 +30,14 @@ class MyModule(L.LightningModule):
         }
 
     def step(self, batch, batch_idx, phase):
-        labels = batch.pop("labels")
+        strat_id = batch.pop("strat_id")
+        labels = batch["labels"]
+        # input_ids = batch["input_ids"]
 
-        outputs = self.model(**batch, predict = False)
+        outputs = self.model(**batch)
+        if phase == "val" or phase == "train":
+            outputs = outputs[1]
+
         if phase == "val":
             labels[:, 0] = -100
             outputs = outputs[..., :self.tokenizer.vocab_size].contiguous()
@@ -41,7 +45,8 @@ class MyModule(L.LightningModule):
             alpha_l = []
 
             lm_size = outputs.size()
-            for i in batch["strat_id"]:
+            
+            for i in strat_id:
                 tmp_alpha = self.model.strategy_alpha[i.item()]
                 tmp_alpha = tmp_alpha * torch.ones(lm_size[1], lm_size[2], device=self.device)
                 alpha_l.append(tmp_alpha)
@@ -49,23 +54,21 @@ class MyModule(L.LightningModule):
 
             outputs = (torch.ones_like(outputs, device=self.device)+alpha_l)*outputs - alpha_l*outputs
 
-        loss = F.cross_entropy(outputs.view(-1, outputs.size(-1)), labels.view(-1), reduction="none")
-        loss = loss.view(labels.size(0), labels.size(1))
-        label_size = torch.sum(labels.ne(-100), dim=1).type_as(loss)
-        masked_lm_loss = torch.sum(loss) / torch.sum(label_size)
+        loss = F.cross_entropy(outputs.view(-1, outputs.size(-1)), labels.view(-1), reduction='none')
+        loss = torch.sum(loss.view(labels.size(0), labels.size(1)))
+        label_size = torch.sum(torch.sum(labels.ne(-100), dim=1).type_as(loss))
 
-        input_ids = batch["input_ids"]
-        tmp_loss = float(torch.sum(loss).item())
+        # breakpoint()
 
         metrics = self.metrics[phase]
-        metrics["loss"] += tmp_loss
-        metrics["steps"] += label_size.sum().float()
+        metrics["loss"] += (loss / label_size).item()
+        metrics["steps"] += label_size
 
-        return masked_lm_loss / (Config.BATCH_SIZE * Config.GRADIENT_ACCUMULATION_STEPS / input_ids.shape[0])
+        return loss / label_size
     
     def training_step(self, batch, batch_idx):
         loss = self.step(batch, batch_idx, "train")
-        logging.log({"train_epoch_loss": self.metrics['train']["loss"] / self.metrics['train']["steps"]})
+        logging.log({"train_epoch_loss": self.metrics['train']["loss"]/ self.metrics['train']["steps"]})
 
         current_lr = self.optimizers().param_groups[0]["lr"]
         logging.log({"learning_rate": current_lr})
@@ -83,6 +86,7 @@ class MyModule(L.LightningModule):
     def on_epoch_end(self, phase):
         metrics = self.metrics[phase]
         loss = metrics["loss"] / metrics["steps"]
+        # breakpoint()
         ppl = np.exp(loss.item())
 
         logging.log({f"{phase}_loss": loss, f"{phase}_ppl": ppl})

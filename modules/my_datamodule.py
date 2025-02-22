@@ -43,7 +43,7 @@ class MyDataModule(L.LightningDataModule):
 
     def train_dataloader(self):
         return DataLoader(
-            self.train_dataset[1:4],
+            self.train_dataset,
             batch_size=self.BATCH_SIZE, 
             num_workers=self.num_workers,
             shuffle=True,
@@ -52,7 +52,7 @@ class MyDataModule(L.LightningDataModule):
 
     def val_dataloader(self):
         return DataLoader(
-            self.dev_dataset[1:4],
+            self.dev_dataset,
             batch_size=self.BATCH_SIZE, 
             num_workers=self.num_workers,
             collate_fn=partial(MyDataModule.collate, tokenizer=self.tokenizer)
@@ -68,7 +68,7 @@ class MyDataModule(L.LightningDataModule):
 
     def predict_dataloader(self):
         return DataLoader(
-            self.test_dataset[1:20],
+            self.test_dataset,
             batch_size=self.BATCH_SIZE, 
             num_workers=self.num_workers,
             collate_fn=partial(MyDataModule.collate, tokenizer=self.tokenizer, is_test=True)
