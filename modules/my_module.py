@@ -1,3 +1,4 @@
+import csv
 import torch
 import numpy as np
 import lightning as L
@@ -5,12 +6,16 @@ import torch.nn.functional as F
 from transformers.tokenization_utils import PreTrainedTokenizer
 from transformers.optimization import AdamW, get_linear_schedule_with_warmup
 
+from libs.utils.utils import cut_seq_to_eos, norm
 from libs.config import Config, Logging
+from modules.my_model import MyModel
+from modules.my_datamodule import MyDataModule
+from libs.metric.metrics import Metric
 
 logging = Logging()
 
 class MyModule(L.LightningModule):
-    def __init__(self, tokenizer: PreTrainedTokenizer, model):
+    def __init__(self, tokenizer: PreTrainedTokenizer, model: MyModel):
         super().__init__()
 
         print(self.device)
@@ -21,13 +26,13 @@ class MyModule(L.LightningModule):
 
         self.save_hyperparameters(ignore=['model'])
 
-        # self.model.to(self.device)
-
         self.metrics = {
             "train": {"loss": 0.0, "steps": 0},
             "val": {"loss": 0.0, "steps": 0},
             "test": {"loss": 0.0, "steps": 0}
         }
+
+        self.metric = Metric(tokenizer=tokenizer)
 
     def step(self, batch, batch_idx, phase):
         strat_id = batch.pop("strat_id")
@@ -76,6 +81,28 @@ class MyModule(L.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         return self.step(batch, batch_idx, "val")
+    
+    def test_step(self, batch, batch_idx):
+        return self.step(batch, batch_idx, "test")
+    
+    def predict_step(self, batch, batch_idx):
+        strat_id = batch.pop("strat_id")
+        eos = self.tokenizer.eos_token_id if self.tokenizer.eos_token_id else self.tokenizer.sep_token_id
+
+        with torch.no_grad():
+            encoded_info, generations = self.model.generate(**batch)
+
+            generations = [cut_seq_to_eos(each, eos) for each in generations.tolist()]
+
+            for idx in range(len(generations)):
+                true_predict = MyDataModule.get_ref(batch_idx * Config.BATCH_SIZE + idx)
+                r = norm(true_predict['response'])
+                p = true_predict['context']
+                ref, gen = [r], norm(self.tokenizer.decode(generations[idx]))
+
+                self.metric.forword(ref, gen)
+
+                logging.log_predict(ref=ref, gen=gen)
 
     def on_train_epoch_end(self):
         self.on_epoch_end("train")
@@ -83,14 +110,30 @@ class MyModule(L.LightningModule):
     def on_validation_epoch_end(self):
         self.on_epoch_end("val")
 
+    def on_test_epoch_end(self):
+        self.on_epoch_end("test")
+
+    def on_predict_epoch_end(self):
+        r_l = self.metric.calc_rouge_l()
+        f1 = self.metric.calc_unigram_f1()
+        b_2 = self.metric.calc_bleu_k(k=2)
+        b_4 = self.metric.calc_bleu_k(k=4)
+        d_2 = self.metric.calc_distinct_k(k=2)
+        d_4 = self.metric.calc_distinct_k(k=4)
+
+        with open(logging.csv_path, "a", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(["PREDICT"])
+            writer.writerow(["R_L", "f1", "b_2", "b_4", "d_2", "d_4"])
+            writer.writerow([r_l, f1, b_2, b_4, d_2, d_4])
+
     def on_epoch_end(self, phase):
         metrics = self.metrics[phase]
         loss = metrics["loss"] / metrics["steps"]
-        # breakpoint()
         ppl = np.exp(loss.item())
 
-        logging.log({f"{phase}_loss": loss, f"{phase}_ppl": ppl})
-        logging.log_csv(self.current_epoch, phase, loss, ppl)
+        logging.log({f"{phase}_loss": loss.item(), f"{phase}_ppl": ppl})
+        logging.log_csv(self.current_epoch, phase, loss.item(), ppl)
 
         metrics["loss"], metrics["steps"] = 0.0, 0
 
