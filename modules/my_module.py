@@ -84,7 +84,7 @@ class MyModule(L.LightningModule):
         return self.step(batch, batch_idx, "test")
     
     def predict_step(self, batch, batch_idx):
-        strat_id = batch.pop("strat_id")
+        # strat_id = batch.pop("strat_id")
         eos = self.tokenizer.eos_token_id if self.tokenizer.eos_token_id else self.tokenizer.sep_token_id
 
         with torch.no_grad():
