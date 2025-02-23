@@ -39,9 +39,7 @@ class MyModule(L.LightningModule):
         labels = batch["labels"]
         # input_ids = batch["input_ids"]
 
-        outputs = self.model(**batch)
-        if phase == "val" or phase == "train":
-            outputs = outputs[1]
+        outputs = self.model(**batch)[1]
 
         if phase == "val":
             labels[:, 0] = -100
