@@ -74,6 +74,10 @@ class MyDataModule(L.LightningDataModule):
             collate_fn=partial(MyDataModule.collate, tokenizer=self.tokenizer, is_test=True)
         )
     
+    @classmethod
+    def get_ref(cls, index: int) -> dict:
+        return cls.test_dataset.inputs[index]
+    
     @staticmethod
     def collate(features: List[InputFeature], tokenizer: PreTrainedTokenizer, is_test=False):
         pad = tokenizer.pad_token_id if tokenizer.pad_token_id else tokenizer.eos_token_id
