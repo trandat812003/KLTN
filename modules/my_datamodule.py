@@ -76,7 +76,7 @@ class MyDataModule(L.LightningDataModule):
     
     @classmethod
     def get_ref(cls, index: int) -> dict:
-        return cls.test_dataset.inputs[index]
+        return cls().test_dataset.inputs[index]
     
     @staticmethod
     def collate(features: List[InputFeature], tokenizer: PreTrainedTokenizer, is_test=False):
