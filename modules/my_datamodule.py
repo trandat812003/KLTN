@@ -13,6 +13,8 @@ from libs.config import Config
 
 
 class MyDataModule(L.LightningDataModule):
+    _dataset_esc: ESConvDataset = None
+
     def __init__(self, tokenizer: PreTrainedTokenizer) -> None:
         super().__init__()
 
@@ -40,6 +42,7 @@ class MyDataModule(L.LightningDataModule):
 
         if stage == "predict":
             self.test_dataset.setup()
+            MyDataModule._dataset_esc = self.test_dataset
 
     def train_dataloader(self):
         return DataLoader(
@@ -76,7 +79,9 @@ class MyDataModule(L.LightningDataModule):
     
     @classmethod
     def get_ref(cls, index: int) -> dict:
-        return cls().test_dataset.inputs[index]
+        if cls._dataset_esc is None:
+            raise ValueError()
+        return cls._dataset_esc[index]
     
     @staticmethod
     def collate(features: List[InputFeature], tokenizer: PreTrainedTokenizer, is_test=False):

@@ -122,8 +122,8 @@ class MyModule(L.LightningModule):
         with open(logging.csv_path, "a", newline="") as file:
             writer = csv.writer(file)
             writer.writerow(["PREDICT"])
-            writer.writerow(["R_L", "f1", "b_2", "b_4", "d_2", "d_4"])
-            writer.writerow([r_l, f1, b_2, b_4, d_2, d_4])
+            writer.writerow(["f1", "b_2", "b_4", "d_2", "d_4", "R_L"])
+            writer.writerow([f1, b_2, b_4, d_2, d_4, r_l])
 
     def on_epoch_end(self, phase):
         metrics = self.metrics[phase]
