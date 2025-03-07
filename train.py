@@ -8,7 +8,7 @@ from libs.utils.get_tokenizer import get_tokenizer
 from libs.utils.get_model import get_model
 from libs.config import Config, Logging
 
-torch.set_float32_matmul_precision('high')
+torch.set_float32_matmul_precision('medium')
 logging = Logging()
 
 tokenizer = get_tokenizer()
@@ -22,9 +22,8 @@ trainer = Trainer(
     accelerator='gpu',
     devices=[0, 1, 2], 
     strategy='ddp',
-    precision='bf16-true'
+    precision='bf16'
 )
 
 trainer.fit(module, datamodule=datamodule)
 trainer.test(module, datamodule=datamodule)
-trainer.predict(module, datamodule=datamodule)
