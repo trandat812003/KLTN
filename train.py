@@ -20,7 +20,7 @@ trainer = Trainer(
     max_epochs=Config.NUM_EPOCHS, 
     gradient_clip_val=Config.GRADIENT_ACCUMULATION_STEPS,
     accelerator='gpu',
-    devices=[0, 1, 2], 
+    devices=[1, 2, 3], 
     strategy='ddp',
     precision='bf16'
 )

@@ -153,38 +153,14 @@ class MyModule(L.LightningModule):
         # return [optimizer], [{"scheduler": scheduler, "interval": "step"}]
 
         muon_params = [
-            {
-                "params": [
-                    p for name, p in param_optimizer
-                    if p.ndim >= 2 and "embed_tokens" not in name and "lm_head" not in name and not any(nd in name for nd in no_decay)
-                ], 
-                "weight_decay": 0.01
-            },
-            {
-                "params": [
-                    p for name, p in param_optimizer
-                    if p.ndim >= 2 and "embed_tokens" not in name and "lm_head" not in name and any(nd in name for nd in no_decay)
-                ], 
-                "weight_decay": 0.0
-            }
+            p for name, p in param_optimizer
+            if p.ndim >= 2 and "embed_tokens" not in name and "lm_head" not in name and not any(nd in name for nd in no_decay)
             
         ]
 
         adamW_params = [
-            {
-                "params": [
-                    p for name, p in param_optimizer
-                    if p.ndim < 2 and not any(nd in name for nd in no_decay)
-                ], 
-                "weight_decay": 0.01
-            },
-            {
-                "params": [
-                    p for name, p in param_optimizer
-                    if p.ndim < 2 and any(nd in name for nd in no_decay)
-                ], 
-                "weight_decay": 0.0
-            }
+            p for name, p in param_optimizer
+            if p.ndim < 2 and not any(nd in name for nd in no_decay)
             
         ]
 
