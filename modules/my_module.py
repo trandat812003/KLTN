@@ -5,7 +5,7 @@ import lightning as L
 import torch.nn.functional as F
 from transformers.tokenization_utils import PreTrainedTokenizer
 from transformers.optimization import AdamW, get_linear_schedule_with_warmup
-from muon import Muon
+from libs.optimzer.moonlight import Moonlight
 
 from libs.utils.utils import cut_seq_to_eos, norm
 from libs.config import Config, Logging
@@ -188,7 +188,7 @@ class MyModule(L.LightningModule):
             
         ]
 
-        optimizer = Muon(
+        optimizer = Moonlight(
             lr=Config.lr,
             muon_params=muon_params,
             adamw_params=adamW_params,
