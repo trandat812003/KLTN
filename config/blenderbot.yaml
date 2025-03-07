@@ -1,5 +1,5 @@
 # pretrained_model_path: ./.cache/augesc
-pretrained_model_path: facebook/blenderbot-90M
+pretrained_model_path: facebook/blenderbot_small-90M
 # pretrained_model_path: Qwen/Qwen2.5-1.5B
 custom_config_path: null
 gradient_checkpointing: false
