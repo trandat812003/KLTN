@@ -3,15 +3,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 from transformers import PreTrainedTokenizer
 from transformers.modeling_outputs import Seq2SeqModelOutput
-# from transformers.models.blenderbot_small import (BlenderbotSmallConfig, BlenderbotSmallForConditionalGeneration)
-from transformers.models.blenderbot import (BlenderbotConfig, BlenderbotForConditionalGeneration)
+from transformers.models.blenderbot_small import (BlenderbotSmallConfig, BlenderbotSmallForConditionalGeneration)
+# from transformers.models.blenderbot import (BlenderbotConfig, BlenderbotForConditionalGeneration)
 from transformers.modeling_outputs import Seq2SeqLMOutput
 from typing import List, Optional, Tuple, Union
 from libs.config import Config
 
 
-class MyModel(BlenderbotForConditionalGeneration):
-    def __init__(self, config: BlenderbotConfig):
+class MyModel(BlenderbotSmallForConditionalGeneration):
+    def __init__(self, config: BlenderbotSmallConfig):
         super().__init__(config)
         self.tokenizer: PreTrainedTokenizer = None
     

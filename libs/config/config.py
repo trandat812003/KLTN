@@ -55,7 +55,7 @@ class Config:
     @classmethod
     @property
     def MAX_INPUT_LENGTH(cls):
-        return 256
+        return 128
 
     @classmethod
     @property
