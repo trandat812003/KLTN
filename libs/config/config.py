@@ -44,7 +44,7 @@ class Config:
     @classmethod
     @property
     def NUM_EPOCHS(cls):
-        return 5
+        return 25
     
     @classmethod
     @property
