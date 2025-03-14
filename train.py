@@ -1,11 +1,9 @@
 import torch
 from lightning import Trainer
 
-from modules.my_module import MyModule
-from modules.my_datamodule import MyDataModule
+from module import MyModule, MyDataModule
 from libs.config import Config
-from libs.utils.get_tokenizer import get_tokenizer
-from libs.utils.get_model import get_model
+from libs.utils.model_loader import get_tokenizer, get_model
 from libs.config import Config, Logging
 
 torch.set_float32_matmul_precision('medium')
