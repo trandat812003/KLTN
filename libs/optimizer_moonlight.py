@@ -195,4 +195,3 @@ class Moonlight(torch.optim.Optimizer):
                 p.data.add_(g, alpha=-lr / scale)
 
         return loss
-    

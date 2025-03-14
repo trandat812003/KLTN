@@ -1,17 +1,22 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 from transformers import PreTrainedTokenizer
 from transformers.modeling_outputs import Seq2SeqModelOutput
-from transformers.models.blenderbot_small import (BlenderbotSmallConfig, BlenderbotSmallForConditionalGeneration)
-# from transformers.models.blenderbot import (BlenderbotConfig, BlenderbotForConditionalGeneration)
-from transformers.modeling_outputs import Seq2SeqLMOutput
-from typing import List, Optional, Tuple, Union
-from libs.config import Config
+from libs.config import Config, BlenderbotConfig as MyBlenderbotConfig
+
+if "small" in MyBlenderbotConfig.PRETRAIN_MODEL.lower():
+    from transformers.models.blenderbot_small import (
+        BlenderbotSmallConfig as BlenderbotConfig,
+        BlenderbotSmallForConditionalGeneration as BlenderbotModel
+    )
+else:
+    from transformers.models.blenderbot import (
+        BlenderbotConfig,
+        BlenderbotForConditionalGeneration as BlenderbotModel
+    )
 
 
-class MyModel(BlenderbotSmallForConditionalGeneration):
-    def __init__(self, config: BlenderbotSmallConfig):
+class MyModel(BlenderbotModel):
+    def __init__(self, config: BlenderbotConfig):
         super().__init__(config)
         self.tokenizer: PreTrainedTokenizer = None
     
@@ -56,33 +61,18 @@ class MyModel(BlenderbotSmallForConditionalGeneration):
             return_dict=return_dict,
         )
         lm_logits = self.lm_head(decoder_outputs.last_hidden_state) + self.final_logits_bias
-        alpha_l = []
 
-        lm_size = lm_logits.size()
-        device = lm_logits.device
-        strat_id = kwargs.pop("strat_id")
-        for i in strat_id:
-            # breakpoint()
-            tmp_alpha = self.strategy_alpha[i.item()]
-            tmp_alpha = tmp_alpha.to(device) * torch.ones(lm_size[1], lm_size[2]).to(device)
-            alpha_l.append(tmp_alpha)
-        alpha_l = torch.stack(alpha_l)
-
-        lm_logits = (torch.ones_like(lm_logits).to(device)+alpha_l)*lm_logits - alpha_l*lm_logits
-
-        if Config.KNOWLEDGE_NAME in ['sbert','graph']:
-            if Config.DATA_NAME == 'esconv':
-                logits = lm_logits[:, 0, -16:-8]
-            elif Config.DATA_NAME == 'mi':
-                logits = lm_logits[:, 0, -18:-8]
+        if Config.DATA_NAME == 'esconv':
+            logits = lm_logits[:, 0, -8:]
+        elif Config.DATA_NAME == 'mi':
+            logits = lm_logits[:, 0, -10:]
     
         pred = torch.argmax(logits, dim=-1)
         
-        if Config.KNOWLEDGE_NAME in ['sbert','graph']:
-            if Config.DATA_NAME == 'esconv':
-                decoder_input_ids = torch.cat([decoder_input_ids, pred[..., None] + len(self.tokenizer) - 16], dim=-1)
-            elif Config.DATA_NAME == 'mi':
-                decoder_input_ids = torch.cat([decoder_input_ids, pred[..., None] + len(self.tokenizer) - 18], dim=-1)
+        if Config.DATA_NAME == 'esconv':
+            decoder_input_ids = torch.cat([decoder_input_ids, pred[..., None] + len(self.tokenizer) - 8], dim=-1)
+        elif Config.DATA_NAME == 'mi':
+            decoder_input_ids = torch.cat([decoder_input_ids, pred[..., None] + len(self.tokenizer) - 10], dim=-1)
         
         kwargs['max_length'] = Config.MAX_INPUT_LENGTH + decoder_input_ids.size(1)
         kwargs['use_cache'] = True
