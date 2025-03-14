@@ -9,7 +9,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 def create_folder(folder_name: str):
     if not os.path.exists(folder_name):
-        os.makedirs(folder_name)
+        os.makedirs(folder_name, exist_ok=True)
         return
 
 def read_file(file_name: str) -> list[str]:
