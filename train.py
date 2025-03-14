@@ -12,7 +12,7 @@ logging = Logging()
 
 tokenizer = get_tokenizer()
 datamodule = MyDataModule(tokenizer=tokenizer)
-model = get_model("cuda")
+model = get_model()
 module = MyModule(tokenizer, model)
 
 trainer = Trainer(
