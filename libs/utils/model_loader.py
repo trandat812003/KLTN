@@ -2,10 +2,10 @@ import torch
 from transformers import AutoTokenizer, AutoConfig
 
 from libs.config import BlenderbotConfig, Config
+from module import MyModel
 
 
-
-def get_model(device=torch.device('cpu')):
+def get_model():
     model = MyModel.from_pretrained(BlenderbotConfig.PRETRAIN_MODEL)
 
     if BlenderbotConfig.CUSTOM_CONFIG_PATH is not None:
