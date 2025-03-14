@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from transformers.tokenization_utils import PreTrainedTokenizer
 from libs.config import Config
 from libs.dataset import BaseDataset, MIDataset, ESConvDataset
-from libs.utils.input_feature import InputFeature
+from libs.dataset import InputFeature
 from multiprocessing import cpu_count
 import torch
 from torch.nn.utils.rnn import pad_sequence
@@ -112,28 +112,12 @@ class MyDataModule(L.LightningDataModule):
                 batch_first=True, 
                 padding_value=-100
             )
-            
-        
-        if Config.DATA_NAME == 'esconv':
-            strat_id = torch.tensor([f.labels[0] % 8 for f in features], dtype=torch.long)
-        elif Config.DATA_NAME == 'mi':
-            strat_id = torch.tensor([f.labels[0] for f in features], dtype=torch.long) 
-        
-        # if Config.KNOWLEDGE_NAME == 'basic':
-        #     strat_id += 5
-        # elif Config.KNOWLEDGE_NAME == 'bm25':
-        #     strat_id += 1
-        # elif Config.KNOWLEDGE_NAME == 'oracle':
-        #     strat_id += 6
-        # elif Config.KNOWLEDGE_NAME in ['sbert','graph']:
-        #     strat_id += 8
         
         res = {
             'input_ids': input_ids,
             'attention_mask': attention_mask,
             'decoder_input_ids': decoder_input_ids,
             'labels': labels,
-            'strat_id': strat_id,
         }
         
         return res

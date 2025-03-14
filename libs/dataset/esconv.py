@@ -1,7 +1,7 @@
 from transformers.tokenization_utils import PreTrainedTokenizer
 from libs.dataset.base import BaseDataset
-from libs.config import Config
-from libs.utils.utils import norm
+from libs.utils import norm, weight_text_by_hybrid, weight_text_by_tf_ids
+from libs.config import BlenderbotConfig
 
 
 class ESConvDataset(BaseDataset):
@@ -22,23 +22,25 @@ class ESConvDataset(BaseDataset):
             if turn['speaker'] == 'sys':
                 strat_id = process('[' + turn['strategy'] + ']')
                 assert len(strat_id) == 1, "Strategy ID must be a single token."
-                strat_id = strat_id[0]
+                words = norm(turn["text"]).split()
+                vad_scores = [self.get_vad_scores(word) for word in words]
+                weights = weight_text_by_hybrid(words, vad_scores[:, 1])
+                v,a,d = self.compute_weighted_vad(vad_scores, weights)
 
-                heal = []
-                if Config.KNOWLEDGE_NAME in ['sbert', 'graph']:
-                    heal = process(turn['heal'])
+                strat_ids = BlenderbotConfig.select_strategy(v,a,d)
+                strat_ids = [process(text) for text in strat_ids] + [strat_id]
 
-            elif Config.KNOWLEDGE_NAME in ['bm25', 'oracle']:
-                knowledge = process('[knowledge]') + process(turn['knowledge'])
+                heal = process(turn['heal'])
             else:
                 knowledge = process(turn['knowledge'])
+                
 
             if i > 0 and turn['speaker'] == 'sys':
                 inputs.append({
                     'context': context.copy(),
                     'knowledge': knowledge + heal,
                     'response': text,
-                    'strat_id': strat_id,
+                    'strat_id': strat_ids,
                 })
 
                 self.inputs.append({

@@ -1,13 +1,12 @@
 import json
 from transformers.tokenization_utils import PreTrainedTokenizer
 from libs.config import Config
-from libs.utils.input_feature import InputFeature
-from libs.utils.file_manager import save_file_pickle, load_file_pickle, read_file
+from libs.dataset.input_feature import InputFeature
 from libs.dataset.base import BaseDataset
 from libs.config import Config
 
 
-class AugDataset(BaseDataset):
+class AugmentDataset(BaseDataset):
     def __init__(self, tokenizer: PreTrainedTokenizer, stage: str) -> None:
         super().__init__(tokenizer, stage)
 
