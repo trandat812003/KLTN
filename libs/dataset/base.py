@@ -41,7 +41,7 @@ class BaseDataset(Dataset):
             {'data_list': self.data_list, 'inputs': self.inputs}
         )
 
-    def get_vad_scores(self, word: str) -> torch.Tensor[float, float, float]:
+    def get_vad_scores(self, word: str) -> torch.Tensor:
         if word in self.VAD.index:
             valence = self.VAD.loc[word, "Valence"]
             arousal = self.VAD.loc[word, "Arousal"]
