@@ -59,15 +59,14 @@ class BaseDataset(Dataset):
 
         return tuple(weighted_vad.tolist())
 
-    from libs.dataset import InputFeature
-    def _convert_inputs_to_features(self, inputs: list[dict]) -> list[InputFeature]:
+    def _convert_inputs_to_features(self, inputs: list[dict]) -> list:
         if not inputs:
             return []
         
         features = [self._featurize(**ipt) for ipt in inputs]
         return features
     
-    def _featurize(self, context: list[int], knowledge: list[int], response: list[int], strat_id: list[int]) -> InputFeature:
+    def _featurize(self, context: list[int], knowledge: list[int], response: list[int], strat_id: list[int]):
         pad = self.tokenizer.pad_token_id if self.tokenizer.pad_token_id else self.tokenizer.eos_token_id
         bos = self.tokenizer.bos_token_id if self.tokenizer.bos_token_id else  self.tokenizer.cls_token_id
         eos = self.tokenizer.eos_token_id if self.tokenizer.eos_token_id else  self.tokenizer.sep_token_id
@@ -91,7 +90,7 @@ class BaseDataset(Dataset):
     def __len__(self) -> int:
         return len(self.data_list)
     
-    def __getitem__(self, index: int) -> InputFeature:
+    def __getitem__(self, index: int):
         return self.data_list[index]
     
     def _convert_data_to_inputs(self, *args) -> list[dict]:
