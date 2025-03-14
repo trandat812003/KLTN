@@ -28,7 +28,7 @@ class BaseDataset(Dataset):
         self.data_list = []
         self.inputs = []
         reader = read_file(f'./DATA/{Config.DATA_NAME}/{self.stage}.txt')
-        self.VAD = pd.read_csv("./Data/NRC-VAD-Lexicon.txt", delimiter=r"\s+", engine="python")
+        self.VAD = pd.read_csv("./DATA/NRC-VAD-Lexicon.txt", delimiter=r"\s+", engine="python")
 
         for line in reader:
             data = json.loads(line)
