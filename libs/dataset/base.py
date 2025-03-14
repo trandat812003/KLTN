@@ -4,7 +4,6 @@ import torch
 from transformers.tokenization_utils import PreTrainedTokenizer
 from torch.utils.data import Dataset
 from libs.config import Config
-from libs.dataset import InputFeature
 from libs.utils import save_file_pickle, load_file_pickle, read_file
 
 
@@ -60,6 +59,7 @@ class BaseDataset(Dataset):
 
         return tuple(weighted_vad.tolist())
 
+    from libs.dataset import InputFeature
     def _convert_inputs_to_features(self, inputs: list[dict]) -> list[InputFeature]:
         if not inputs:
             return []
@@ -85,6 +85,7 @@ class BaseDataset(Dataset):
 
         assert len(decoder_input_ids) == len(labels), "Mismatch between decoder inputs and labels"
 
+        from libs.dataset import InputFeature
         return InputFeature(input_ids, decoder_input_ids, labels)
     
     def __len__(self) -> int:
