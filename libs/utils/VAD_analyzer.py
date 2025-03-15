@@ -27,7 +27,7 @@ class VADAnalyzer:
                 words.append((idx, word))
                 start = idx + len(word)
         if not vad_scores:
-            return torch.Tensor([], dtype=torch.float32), words
+            return torch.tensor([], dtype=torch.float32), words
         vad_scores.sort(key=lambda x: x[0])
         words.sort(key=lambda x: x[0])
         vad_scores = torch.stack([vad_score[1] for vad_score in vad_scores])
@@ -51,7 +51,7 @@ class VADAnalyzer:
 
 def weight_text_by_hybrid(words: list[str], arousal_scores: torch.Tensor):
     if not words:
-        return torch.Tensor([], dtype=torch.float32)
+        return torch.tensor([], dtype=torch.float32)
     tf_weights = weight_text_by_tf_ids(words)
     word_lengths = torch.tensor([len(word) for word in words], dtype=torch.float32)
     word_lengths /= word_lengths.sum()
@@ -64,7 +64,7 @@ def weight_text_by_hybrid(words: list[str], arousal_scores: torch.Tensor):
 
 def weight_text_by_tf_ids(words: list[str]) -> torch.Tensor:
     word_counts = Counter(words)
-    tf_weights = torch.tensor([word_counts[word] / len(words) for word in words])
+    tf_weights = torch.tensor([word_counts[word] / len(words) for word in words], dtype=torch.float32)
 
     tf_weights /= tf_weights.sum()
 
