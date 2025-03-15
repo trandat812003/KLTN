@@ -11,7 +11,7 @@ class VADAnalyzer:
     _VAD.set_index('Word', inplace=True)
 
     @classmethod
-    def _get_vad_scores(cls, text: str) -> list:
+    def _get_vad_scores(cls, text: str) -> tuple[torch.Tensor, list]:
         vad_scores = []
         words = []
         for word in cls._VAD.index:
@@ -27,7 +27,7 @@ class VADAnalyzer:
                 words.append((idx, word))
                 start = idx + len(word)
         if not vad_scores:
-            return vad_scores, words
+            return torch.Tensor([], dtype=torch.float32), words
         vad_scores.sort(key=lambda x: x[0])
         words.sort(key=lambda x: x[0])
         vad_scores = torch.stack([vad_score[1] for vad_score in vad_scores])
@@ -37,6 +37,8 @@ class VADAnalyzer:
     @classmethod
     def compute_weighted_vad(cls, text: str) -> tuple[float, float, float]:
         vad_scores, words = cls._get_vad_scores(text)
+        if vad_scores.shape[0] == 0:
+            return (0.0, 0.0, 0.0)
         weights = weight_text_by_hybrid(words, vad_scores[:, 1])
         if vad_scores.shape[0] == 0 or weights.shape[0] == 0:
             return (0.0, 0.0, 0.0)
