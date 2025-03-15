@@ -1,7 +1,8 @@
 from transformers.tokenization_utils import PreTrainedTokenizer
 from libs.dataset.base import BaseDataset
-from libs.utils import norm, weight_text_by_hybrid, weight_text_by_tf_ids
+from libs.utils.VAD_analyzer import VADAnalyzer
 from libs.config import BlenderbotConfig
+from libs.utils import norm
 
 
 class ESConvDataset(BaseDataset):
@@ -22,10 +23,7 @@ class ESConvDataset(BaseDataset):
             if turn['speaker'] == 'sys':
                 strat_id = process('[' + turn['strategy'] + ']')
                 assert len(strat_id) == 1, "Strategy ID must be a single token."
-                words = norm(turn["text"]).split()
-                vad_scores = [self.get_vad_scores(word) for word in words]
-                weights = weight_text_by_hybrid(words, vad_scores[:, 1])
-                v,a,d = self.compute_weighted_vad(vad_scores, weights)
+                v,a,d = VADAnalyzer.compute_weighted_vad(norm(turn["text"]))
 
                 strat_ids = BlenderbotConfig.select_strategy(v,a,d)
                 strat_ids = [process(text) for text in strat_ids] + [strat_id]
@@ -33,7 +31,6 @@ class ESConvDataset(BaseDataset):
                 heal = process(turn['heal'])
             else:
                 knowledge = process(turn['knowledge'])
-                
 
             if i > 0 and turn['speaker'] == 'sys':
                 inputs.append({
