@@ -5,7 +5,7 @@ from transformers.tokenization_utils import PreTrainedTokenizer
 
 from libs.optimizer_moonlight import Moonlight
 from libs.config import Config
-from libs.logging import my_logging
+from libs.my_logging import my_logging
 from module.model import MyModel
 from libs.metrics import Metric, get_ppl_value
 
