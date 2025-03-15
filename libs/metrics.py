@@ -1,7 +1,7 @@
 import warnings
 import numpy as np
 import torch
-from transformers import PreTrainedTokenizer
+from src.src.transformers import PreTrainedTokenizer
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
 from sklearn.metrics import f1_score
 from rouge_score import rouge_scorer

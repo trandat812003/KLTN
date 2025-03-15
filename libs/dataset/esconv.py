@@ -1,5 +1,5 @@
 from itertools import chain
-from transformers.tokenization_utils import PreTrainedTokenizer
+from src.transformers.tokenization_utils import PreTrainedTokenizer
 from libs.dataset.base import BaseDataset
 from libs.utils.VAD_analyzer import VADAnalyzer
 from libs.config import BlenderbotConfig
