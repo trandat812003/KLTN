@@ -39,9 +39,8 @@ class MyModule(L.LightningModule):
 
         
         if phase == "train":
-            loss = loss.view(labels.size(0), labels.size(1))
             label_size = torch.sum(labels.ne(-100), dim=1).type_as(loss)
-            loss = torch.sum(loss) / torch.sum(label_size)
+            loss = loss / torch.sum(label_size)
         else:
             labels[:, 0] = -100
             logits = logits[..., :self.tokenizer.vocab_size].contiguous()
