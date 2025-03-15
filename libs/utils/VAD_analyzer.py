@@ -28,7 +28,7 @@ class VADAnalyzer:
                 start = idx + len(word)
         vad_scores.sort(key=lambda x: x[0])
         words.sort(key=lambda x: x[0])
-        vad_scores = torch.stack(vad_score[1] for vad_score in vad_scores)
+        vad_scores = torch.stack([vad_score[1] for vad_score in vad_scores])
 
         return vad_scores, words
     
