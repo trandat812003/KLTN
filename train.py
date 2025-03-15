@@ -5,7 +5,6 @@ from module import MyModule, MyDataModule
 from libs.config import Config
 from libs.utils.model_loader import get_tokenizer, get_model
 from libs.config import Config
-from libs.logging import logging
 
 torch.set_float32_matmul_precision('medium')
 
