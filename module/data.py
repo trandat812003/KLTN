@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from transformers.tokenization_utils import PreTrainedTokenizer
 from libs.config import Config
 from libs.dataset import BaseDataset, MIDataset, ESConvDataset
-from libs.dataset import InputFeature
+from libs.dataset.input_feature import InputFeature
 from multiprocessing import cpu_count
 import torch
 from torch.nn.utils.rnn import pad_sequence
