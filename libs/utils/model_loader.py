@@ -1,5 +1,5 @@
 import torch
-from transformers import AutoTokenizer, AutoConfig
+from src.transformers import AutoTokenizer, AutoConfig
 
 from libs.config import BlenderbotConfig, Config
 from module import MyModel

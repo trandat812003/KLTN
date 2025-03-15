@@ -1,7 +1,7 @@
 import lightning as L
 from functools import partial
 from torch.utils.data import DataLoader
-from transformers.tokenization_utils import PreTrainedTokenizer
+from src.transformers.tokenization_utils import PreTrainedTokenizer
 from libs.config import Config
 from libs.dataset import BaseDataset, MIDataset, ESConvDataset
 from libs.dataset.input_feature import InputFeature
