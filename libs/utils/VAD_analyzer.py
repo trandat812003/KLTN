@@ -7,7 +7,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from libs.utils import norm
 
 class VADAnalyzer:
-    _VAD = pd.read_csv("./DATA/NRC-VAD-Lexicon.csv", na_values=[])
+    _VAD = pd.read_csv("./DATA/NRC-VAD-Lexicon.csv", keep_default_na=False)
     _VAD.set_index('Word', inplace=True)
 
     @classmethod
