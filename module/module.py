@@ -52,7 +52,7 @@ class MyModule(L.LightningModule):
     
     def training_step(self, batch, batch_idx):
         loss = self.step(batch, batch_idx, "train")
-        custom_logging.log({"train_epoch_loss": self.metrics['train']["loss"]/ self.metrics['train']["steps"]})
+        custom_logging.log({"train_epoch_loss": loss})
 
         current_lr = self.optimizers().param_groups[0]["lr"]
         custom_logging.log({"learning_rate": current_lr})
