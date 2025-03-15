@@ -1,14 +1,13 @@
 import pandas as pd
 import torch
-import numpy as np
 from collections import Counter
-from sklearn.feature_extraction.text import TfidfVectorizer
 
 from libs.utils import norm
 
+
 class VADAnalyzer:
     _VAD = pd.read_csv("./DATA/NRC-VAD-Lexicon.csv", keep_default_na=False)
-    _VAD.set_index('Word', inplace=True)
+    _VAD.set_index("Word", inplace=True)
 
     @classmethod
     def _get_vad_scores(cls, text: str) -> tuple[torch.Tensor, list]:
@@ -23,7 +22,14 @@ class VADAnalyzer:
                 valence = cls._VAD.loc[word, "Valence"]
                 arousal = cls._VAD.loc[word, "Arousal"]
                 dominance = cls._VAD.loc[word, "Dominance"]
-                vad_scores.append((idx, torch.tensor([valence, arousal, dominance], dtype=torch.float32)))
+                vad_scores.append(
+                    (
+                        idx,
+                        torch.tensor(
+                            [valence, arousal, dominance], dtype=torch.float32
+                        ),
+                    )
+                )
                 words.append((idx, word))
                 start = idx + len(word)
         if not vad_scores:
@@ -33,7 +39,7 @@ class VADAnalyzer:
         vad_scores = torch.stack([vad_score[1] for vad_score in vad_scores])
 
         return vad_scores, words
-    
+
     @classmethod
     def compute_weighted_vad(cls, text: str) -> tuple[float, float, float]:
         vad_scores, words = cls._get_vad_scores(text)
@@ -47,6 +53,15 @@ class VADAnalyzer:
         weighted_vad = (vad_scores * weights.unsqueeze(1)).sum(dim=0)
 
         return tuple(weighted_vad.tolist())
+    
+    @classmethod
+    def categorize_value(value):
+        if value <= 0.33:
+            return "low"
+        elif value <= 0.66:
+            return "medium"
+        else:
+            return "high"
 
 
 def weight_text_by_hybrid(words: list[str], arousal_scores: torch.Tensor):
@@ -55,16 +70,18 @@ def weight_text_by_hybrid(words: list[str], arousal_scores: torch.Tensor):
     tf_weights = weight_text_by_tf_ids(words)
     word_lengths = torch.tensor([len(word) for word in words], dtype=torch.float32)
     word_lengths /= word_lengths.sum()
-    arousal_scores /= arousal_scores.sum() + 1e-6 
+    arousal_scores /= arousal_scores.sum() + 1e-6
 
     weights = (tf_weights + word_lengths + arousal_scores) / 3
 
-    return torch.tensor(weights, dtype=torch.float32) 
+    return torch.tensor(weights, dtype=torch.float32)
 
 
 def weight_text_by_tf_ids(words: list[str]) -> torch.Tensor:
     word_counts = Counter(words)
-    tf_weights = torch.tensor([word_counts[word] / len(words) for word in words], dtype=torch.float32)
+    tf_weights = torch.tensor(
+        [word_counts[word] / len(words) for word in words], dtype=torch.float32
+    )
 
     tf_weights /= tf_weights.sum()
 
