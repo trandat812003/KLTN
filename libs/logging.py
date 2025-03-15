@@ -40,3 +40,6 @@ class Logging:
                 writer.writerow([])
             else:
                writer.writerow([kwargs["epoch"], kwargs["phase"], kwargs["ppl"]]) 
+
+
+logging = Logging(stage="train", is_wandb=False)
