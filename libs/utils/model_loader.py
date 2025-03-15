@@ -10,9 +10,11 @@ def get_model():
 
     if BlenderbotConfig.CUSTOM_CONFIG_PATH is not None:
         model = MyModel(AutoConfig.from_pretrained(BlenderbotConfig.CUSTOM_CONFIG_PATH))
-    
-    setattr(model.config, 'gradient_checkpointing', BlenderbotConfig.GRADIENT_CHECKPOINTING)
-    
+
+    setattr(
+        model.config, "gradient_checkpointing", BlenderbotConfig.GRADIENT_CHECKPOINTING
+    )
+
     return model
 
 

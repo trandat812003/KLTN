@@ -1,7 +1,6 @@
 import warnings
 import numpy as np
 import torch
-from torcheval.metrics import Perplexity
 from transformers import PreTrainedTokenizer
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
 from sklearn.metrics import f1_score
@@ -24,12 +23,17 @@ class Metric:
 
     def get_bleu_k(self, k=4):
         """Calculate BLEU-k score using NLTK's corpus_bleu."""
-        weights = tuple([1. / k] * k + [0.] * (4 - k))
+        weights = tuple([1.0 / k] * k + [0.0] * (4 - k))
         try:
-            return corpus_bleu(self.refs, self.hyps, weights=weights, smoothing_function=SmoothingFunction().method3)
+            return corpus_bleu(
+                self.refs,
+                self.hyps,
+                weights=weights,
+                smoothing_function=SmoothingFunction().method3,
+            )
         except ZeroDivisionError:
             warnings.warn("Invalid BLEU score due to zero division.")
-            return 0.
+            return 0.0
 
     def get_distinct_k(self, k=2):
         """Tính chỉ số Distinct-k sử dụng paddlenlp."""
@@ -37,7 +41,7 @@ class Metric:
         self.distinct.reset()
         for pred in predictions:
             self.distinct.add_inst(pred)
-        return self.distinct.score()[f'distinct_{k}']
+        return self.distinct.score()[f"distinct_{k}"]
 
     def get_unigram_f1(self):
         """Calculate Unigram F1 score using sklearn's f1_score."""
@@ -49,13 +53,18 @@ class Metric:
 
     def get_rouge_l(self):
         """Calculate ROUGE-L using rouge_score library."""
-        scores = [self.rouge_scorer.score(" ".join(ref[0]), " ".join(hyp))["rougeL"].fmeasure
-                  for ref, hyp in zip(self.refs, self.hyps)]
+        scores = [
+            self.rouge_scorer.score(" ".join(ref[0]), " ".join(hyp))["rougeL"].fmeasure
+            for ref, hyp in zip(self.refs, self.hyps)
+        ]
         return np.mean(scores)
 
 
-def get_ppl_value(lm_logits: torch.Tensor, target: torch.Tensor) -> float:
-    """Tính giá trị Perplexity dựa trên logits của mô hình và target."""
-    perplexity_metric = Perplexity()
-    perplexity_metric.update(lm_logits.cpu(), target.cpu())
-    return perplexity_metric.compute()
+def get_ppl_value(lm_logits: torch.Tensor, labels: torch.Tensor) -> float:
+    loss = torch.functional.F.cross_entropy(lm_logits.view(-1, lm_logits.size(-1)), labels.view(-1), reduction='none')
+    loss = loss.view(labels.size(0), labels.size(1))
+    label_size = torch.sum(labels.ne(-100), dim=1).type_as(loss)
+    ppl_value = torch.exp(torch.mean(torch.sum(loss, dim=1).float() / label_size.float()))
+
+    return ppl_value, label_size
+    
