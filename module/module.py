@@ -5,7 +5,7 @@ from transformers.tokenization_utils import PreTrainedTokenizer
 
 from libs.optimizer_moonlight import Moonlight
 from libs.config import Config
-from libs.my_logging import my_logging
+from libs.my_logging import custom_logging
 from module.model import MyModel
 from libs.metrics import Metric, get_ppl_value
 
@@ -52,10 +52,10 @@ class MyModule(L.LightningModule):
     
     def training_step(self, batch, batch_idx):
         loss = self.step(batch, batch_idx, "train")
-        my_logging.log({"train_epoch_loss": self.metrics['train']["loss"]/ self.metrics['train']["steps"]})
+        custom_logging.log({"train_epoch_loss": self.metrics['train']["loss"]/ self.metrics['train']["steps"]})
 
         current_lr = self.optimizers().param_groups[0]["lr"]
-        my_logging.log({"learning_rate": current_lr})
+        custom_logging.log({"learning_rate": current_lr})
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -76,13 +76,13 @@ class MyModule(L.LightningModule):
     def on_epoch_end(self, phase):
         ppl = torch.Tensor(self.metrics[phase]).mean()
 
-        my_logging.log({f"{phase}_ppl": ppl.item()})
+        custom_logging.log({f"{phase}_ppl": ppl.item()})
         kwargs = {
             "epoch": self.current_epoch,
             "phase": phase,
             "ppl": ppl.item()
         }
-        my_logging.log_csv(**kwargs)
+        custom_logging.log_csv(**kwargs)
 
         self.metrics[phase] = []
 

@@ -57,4 +57,4 @@ class Logging:
                writer.writerow([kwargs["epoch"], kwargs["phase"], kwargs["ppl"]]) 
 
 
-logging = Logging()
+custom_logging = Logging()
