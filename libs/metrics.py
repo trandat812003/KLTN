@@ -57,5 +57,5 @@ class Metric:
 def get_ppl_value(lm_logits: torch.Tensor, target: torch.Tensor) -> float:
     """Tính giá trị Perplexity dựa trên logits của mô hình và target."""
     perplexity_metric = Perplexity()
-    perplexity_metric.update(lm_logits, target)
+    perplexity_metric.update(lm_logits.cpu(), target.cpu())
     return perplexity_metric.compute()
