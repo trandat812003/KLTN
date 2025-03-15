@@ -39,35 +39,6 @@ def save_file_pickle(file_name: str, data: any):
         pickle.dump(data, f)
 
 
-def weight_text_by_hybrid(words: str, arousal_scores: torch.Tensor):
-    words = norm(words).split()
-    word_counts = Counter(words)
-    tf_weights = torch.tensor([word_counts[word] / len(words) for word in words])
-    word_lengths = torch.tensor([len(word) for word in words])
-
-    tf_weights /= tf_weights.sum()
-    word_lengths /= word_lengths.sum()
-    arousal_scores /= arousal_scores.sum() + 1e-6 
-
-    weights = (tf_weights + word_lengths + arousal_scores) / 3
-
-    return torch.tensor(weights, dtype=torch.float32) 
-
-
-def weight_text_by_tf_ids(words: str) -> torch.Tensor:
-    vectorizer = TfidfVectorizer()
-    tfidf_matrix = vectorizer.fit_transform([words])
-    tfidf_scores = np.array(tfidf_matrix.todense()).flatten()
-    total_tfidf = np.sum(tfidf_scores)
-
-    if total_tfidf == 0:
-        return torch.zeros_like(torch.tensor(tfidf_scores)) 
-    
-    weights = tfidf_scores / total_tfidf
-
-    return torch.tensor(weights, dtype=torch.float32)
-
-
 def cut_seq_to_eos(sentence, eos, remove_id=None):
     if remove_id is None:
         remove_id = [-1]

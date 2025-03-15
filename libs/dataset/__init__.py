@@ -1,7 +1,6 @@
 from typing import Type
 
 from libs.dataset.base import BaseDataset
-from libs.dataset.input_feature import InputFeature
 from libs.dataset.esconv import ESConvDataset
 from libs.dataset.mi import MIDataset
 from libs.dataset.augment import AugmentDataset
@@ -15,4 +14,4 @@ else:
     MyDataset = MIDataset
 
 
-__all__ = ["MyDataset", "BaseDataset", "InputFeature", "AugmentDataset"]
+__all__ = ["MyDataset", "BaseDataset", "AugmentDataset"]
