@@ -47,7 +47,7 @@ class VADAnalyzer:
 
 def weight_text_by_hybrid(words: list[str], arousal_scores: torch.Tensor):
     tf_weights = weight_text_by_tf_ids(words)
-    word_lengths = torch.tensor([len(word) for word in words])
+    word_lengths = torch.tensor([len(word) for word in words], dtype=torch.float32)
     word_lengths /= word_lengths.sum()
     arousal_scores /= arousal_scores.sum() + 1e-6 
 
