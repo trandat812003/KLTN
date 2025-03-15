@@ -5,11 +5,9 @@ from transformers.tokenization_utils import PreTrainedTokenizer
 
 from libs.optimizer_moonlight import Moonlight
 from libs.config import Config
-from libs.logging import Logging
+from libs.logging import logging
 from module.model import MyModel
 from libs.metrics import Metric, get_ppl_value
-
-logging = Logging()
 
 class MyModule(L.LightningModule):
     def __init__(self, tokenizer: PreTrainedTokenizer, model: MyModel):
