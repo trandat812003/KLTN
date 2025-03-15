@@ -17,7 +17,7 @@ class BaseDataset(Dataset):
 
     def setup(self) -> None:
         self.data_list, self.inputs = load_file_pickle(
-            root_file=f'./.cache/dataset/{Config.DATA_NAME}',
+            root_file=f'./tmp/dataset/{Config.DATA_NAME}',
             file_name=f'{self.stage}.pkl'
         )
 
@@ -35,7 +35,7 @@ class BaseDataset(Dataset):
             self.data_list.extend(features)
 
         save_file_pickle(
-            f'./.cache/dataset/{Config.DATA_NAME}/{self.stage}.pkl',
+            f'./tmp/dataset/{Config.DATA_NAME}/{self.stage}.pkl',
             {'data_list': self.data_list, 'inputs': self.inputs}
         )
 

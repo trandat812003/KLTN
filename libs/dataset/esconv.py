@@ -1,3 +1,4 @@
+from itertools import chain
 from transformers.tokenization_utils import PreTrainedTokenizer
 from libs.dataset.base import BaseDataset
 from libs.utils.VAD_analyzer import VADAnalyzer
@@ -26,7 +27,7 @@ class ESConvDataset(BaseDataset):
                 v,a,d = VADAnalyzer.compute_weighted_vad(norm(turn["text"]))
 
                 strat_ids = BlenderbotConfig.select_strategy(v,a,d)
-                strat_ids = [process(text) for text in strat_ids] + [strat_id]
+                strat_ids = list(chain.from_iterable([process(text) for text in strat_ids])) + [strat_id]
 
                 heal = process(turn['heal'])
             else:
