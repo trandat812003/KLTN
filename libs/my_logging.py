@@ -50,11 +50,11 @@ class Logging:
         with open(self.csv_path, "a", newline="") as file:
             writer = csv.writer(file)
             if self.is_predict:
-                writer.writerow([f"ref: {kwargs["ref"]}"])
-                writer.writerow([f"gen: {kwargs["gen"]}"])
+                writer.writerow([f"ref: {kwargs['ref']}"])
+                writer.writerow([f"gen: {kwargs['gen']}"])
                 writer.writerow([])
             else:
                writer.writerow([kwargs["epoch"], kwargs["phase"], kwargs["ppl"]]) 
 
 
-custom_logging = Logging()
+custom_logging = Logging(is_wandb=False)

@@ -63,6 +63,5 @@ class BlenderbotConfig:
                 VADAnalyzer.categorize_value(v),
                 VADAnalyzer.categorize_value(a),
                 VADAnalyzer.categorize_value(d),
-            ),
-            None,
+            )
         ]

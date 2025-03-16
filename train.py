@@ -16,8 +16,9 @@ module = MyModule(tokenizer, model)
 trainer = Trainer(
     max_epochs=Config.NUM_EPOCHS,
     gradient_clip_val=Config.GRADIENT_ACCUMULATION_STEPS,
-    accelerator="gpu",
-    devices=1,
+    # accelerator="gpu",
+    accelerator="cpu",
+    # devices=1,
 )
 
 trainer.fit(module, datamodule=datamodule)

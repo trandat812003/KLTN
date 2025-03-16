@@ -55,7 +55,7 @@ class VADAnalyzer:
         return tuple(weighted_vad.tolist())
     
     @classmethod
-    def categorize_value(value):
+    def categorize_value(cls, value):
         if value <= 0.33:
             return "low"
         elif value <= 0.66:
