@@ -1,5 +1,5 @@
 import json
-from src.transformers.tokenization_utils import PreTrainedTokenizer
+from transformers.tokenization_utils import PreTrainedTokenizer
 from torch.utils.data import Dataset
 from libs.dataset.input_feature import InputFeature
 from libs.config import Config

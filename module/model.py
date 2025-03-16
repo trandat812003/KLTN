@@ -1,15 +1,15 @@
 import torch
-from src.transformers import PreTrainedTokenizer
-from src.transformers.modeling_outputs import Seq2SeqModelOutput
+from transformers import PreTrainedTokenizer
+from transformers.modeling_outputs import Seq2SeqModelOutput
 from libs.config import Config, BlenderbotConfig as MyBlenderbotConfig
 
 if "small" in MyBlenderbotConfig.PRETRAIN_MODEL.lower():
-    from src.transformers.models.blenderbot_small import (
+    from transformers.models.blenderbot_small import (
         BlenderbotSmallConfig as BlenderbotConfig,
         BlenderbotSmallForConditionalGeneration as BlenderbotModel,
     )
 else:
-    from src.transformers.models.blenderbot import (
+    from transformers.models.blenderbot import (
         BlenderbotConfig,
         BlenderbotForConditionalGeneration as BlenderbotModel,
     )

@@ -1,4 +1,4 @@
-from src.transformers.tokenization_utils import PreTrainedTokenizer
+from transformers.tokenization_utils import PreTrainedTokenizer
 from libs.dataset.base import BaseDataset
 
 
