@@ -1,5 +1,5 @@
 import json
-from src.transformers.tokenization_utils import PreTrainedTokenizer
+from transformers.tokenization_utils import PreTrainedTokenizer
 from libs.config import Config
 from libs.dataset.input_feature import InputFeature
 from libs.dataset.base import BaseDataset
