@@ -25,16 +25,16 @@ class ESConvDataset(BaseDataset):
             if turn["speaker"] == "sys":
                 strat_id = process("[" + turn["strategy"] + "]")
 
-            #     heal = process(turn["heal"])
-            # else:
-            #     knowledge = process(turn["knowledge"])
+                heal = process(turn["heal"])
+            else:
+                knowledge = process(turn["knowledge"])
 
             if i > 0 and turn["speaker"] == "sys":
                 inputs.append(
                     {
                         "context": context.copy(),
-                        # "knowledge": knowledge + heal,
-                        "knowledge": [],
+                        "knowledge": knowledge + heal,
+                        # "knowledge": [],
                         "response": text,
                         "strat_id": strat_id,
                     }
