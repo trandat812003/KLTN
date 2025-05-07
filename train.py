@@ -11,7 +11,7 @@ from libs.utils.aug import aug
 tokenizer = get_tokenizer()
 datamodule = MyDataModule(tokenizer=tokenizer)
 model = get_model()
-model = aug(tokenizer, model)
+# model = aug(tokenizer, model)
 
 module = MyModule(tokenizer, model)
 
