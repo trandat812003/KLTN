@@ -2,9 +2,9 @@ import torch
 import lightning as L
 from transformers.tokenization_utils import PreTrainedTokenizer
 
-# from transformers.optimization import AdamW, get_linear_schedule_with_warmup
+from transformers.optimization import AdamW, get_linear_schedule_with_warmup
 
-from libs.optimizer_moonlight import Moonlight
+# from libs.optimizer_moonlight import Moonlight
 from libs.config import Config
 from libs.my_logging import custom_logging
 from module.model import MyModel
@@ -82,38 +82,31 @@ class MyModule(L.LightningModule):
     def configure_optimizers(self):
         param_optimizer = list(self.model.named_parameters())
         no_decay = ["bias", "ln", "LayerNorm.weight"]
-        # optimizer_grouped_parameters = [
-        #     {"params": [p for n, p in param_optimizer if p.requires_grad and not any(nd in n for nd in no_decay)], "weight_decay": 0.01},
-        #     {"params": [p for n, p in param_optimizer if p.requires_grad and any(nd in n for nd in no_decay)], "weight_decay": 0.0}
-        # ]
+        optimizer_grouped_parameters = [
+            {
+                "params": [
+                    p
+                    for n, p in param_optimizer
+                    if p.requires_grad and not any(nd in n for nd in no_decay)
+                ],
+                "weight_decay": 0.01,
+            },
+            {
+                "params": [
+                    p
+                    for n, p in param_optimizer
+                    if p.requires_grad and any(nd in n for nd in no_decay)
+                ],
+                "weight_decay": 0.0,
+            },
+        ]
 
-        # optimizer = AdamW(optimizer_grouped_parameters, lr=Config.lr)
+        optimizer = AdamW(optimizer_grouped_parameters, lr=Config.lr)
         # num_optim_steps = 12300 * Config.NUM_EPOCHS // Config.BATCH_SIZE + 1 # len(data_train) = 12285
         # scheduler = get_linear_schedule_with_warmup(
         #     optimizer, num_warmup_steps=100, num_training_steps=num_optim_steps
         # )
 
         # return [optimizer], [{"scheduler": scheduler, "interval": "step"}]
-
-        muon_params = [
-            p
-            for name, p in param_optimizer
-            if p.ndim >= 2
-            and "embed_tokens" not in name
-            and "lm_head" not in name
-            and not any(nd in name for nd in no_decay)
-        ]
-
-        adamW_params = [
-            p
-            for name, p in param_optimizer
-            if p.ndim < 2 and not any(nd in name for nd in no_decay)
-        ]
-
-        optimizer = Moonlight(
-            lr=Config.lr,
-            muon_params=muon_params,
-            adamw_params=adamW_params,
-        )
 
         return optimizer

@@ -50,7 +50,7 @@ class BaseDataset(Dataset):
         context: list[int],
         knowledge: list[int],
         response: list[int],
-        strat_id: list[int],
+        strat_id: int,
     ) -> InputFeature:
         pad = (
             self.tokenizer.pad_token_id
@@ -73,12 +73,9 @@ class BaseDataset(Dataset):
 
         context = [c + [eos] for c in context]
         context += [knowledge + [eos]]
-        input_ids = sum(context, [])[-(Config.MAX_INPUT_LENGTH - len(strat_id)) :]
-        input_ids += strat_id[:-1]
+        input_ids = sum(context, [])[-(Config.MAX_INPUT_LENGTH) :]
 
-        labels = (strat_id[-1] + response + [eos])[
-            : Config.MAX_DECODER_INPUT_LENGTH + 1
-        ]
+        labels = (strat_id + response + [eos])[: Config.MAX_DECODER_INPUT_LENGTH + 1]
         decoder_input_ids = [bos] + labels[:-1]
 
         assert len(decoder_input_ids) == len(
