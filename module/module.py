@@ -2,7 +2,8 @@ import torch
 import lightning as L
 from transformers.tokenization_utils import PreTrainedTokenizer
 
-from transformers.optimization import AdamW, get_linear_schedule_with_warmup
+# from transformers.optimization import AdamW, get_linear_schedule_with_warmup
+from torch.optim import AdamW
 
 # from libs.optimizer_moonlight import Moonlight
 from libs.config import Config
