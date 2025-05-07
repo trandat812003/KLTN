@@ -6,7 +6,7 @@ from libs.config import Config
 from libs.utils.model_loader import get_tokenizer, get_model
 from libs.config import Config
 
-torch.set_float32_matmul_precision("medium")
+# torch.set_float32_matmul_precision("medium")
 
 tokenizer = get_tokenizer()
 datamodule = MyDataModule(tokenizer=tokenizer)
