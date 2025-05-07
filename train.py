@@ -4,13 +4,15 @@ from lightning import Trainer
 from module import MyModule, MyDataModule
 from libs.config import Config
 from libs.utils.model_loader import get_tokenizer, get_model
-from libs.config import Config
+from libs.utils.aug import aug
 
 # torch.set_float32_matmul_precision("medium")
 
 tokenizer = get_tokenizer()
 datamodule = MyDataModule(tokenizer=tokenizer)
 model = get_model()
+model = aug(tokenizer, model)
+
 module = MyModule(tokenizer, model)
 
 trainer = Trainer(
