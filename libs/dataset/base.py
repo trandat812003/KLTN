@@ -23,6 +23,9 @@ class BaseDataset(Dataset):
         if self.data_list is not None:
             return
 
+        if self.stage == "valid":
+            return
+
         self.data_list = []
         self.inputs = []
         reader = read_file(f"./DATA/{Config.DATA_NAME}/{self.stage}.txt")
