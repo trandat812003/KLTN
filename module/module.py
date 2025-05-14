@@ -64,6 +64,14 @@ class MyModule(L.LightningModule):
 
     def on_train_epoch_end(self):
         self.on_epoch_end("train")
+    
+        # ✅ Lưu checkpoint sau mỗi epoch
+        ckpt_dir = os.path.join(Config.OUTPUT_DIR, "checkpoints")
+        os.makedirs(ckpt_dir, exist_ok=True)
+        ckpt_path = os.path.join(ckpt_dir, f"epoch_{self.current_epoch}.ckpt")
+        torch.save(self.model.state_dict(), ckpt_path)
+        print(f"✅ Saved checkpoint: {ckpt_path}")
+
 
     def on_validation_epoch_end(self):
         self.on_epoch_end("val")
