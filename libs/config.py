@@ -10,6 +10,7 @@ class Config:
     DATA_NAME = "esconv"
     KNOWLEDGE_NAME = "sbert"
     BASELINE = "kemi"
+    OUTPUT_DIR = "tmp"
     BATCH_SIZE = 5
     NUM_EPOCHS = 5
     GRADIENT_ACCUMULATION_STEPS = 1.0
