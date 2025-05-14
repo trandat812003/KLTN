@@ -82,6 +82,7 @@ def aug(tokenizer, model):
 
         loss.backward()
         optimizer.step()
+        torch.cuda.empty_cache()
 
     # 📦 Lưu checkpoint
     checkpoint_dir = os.path.join(Config.OUTPUT_DIR, "checkpoints")
