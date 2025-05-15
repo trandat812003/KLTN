@@ -1,0 +1,105 @@
+{
+    "emotion_type": "anxiety",
+    "problem_type": "problems with friends",
+    "situation": "My set of friends with include 6 close women are falling apart because of not communicating often and not being physically close to one another. It is really weird how being apart from one another can really change strong relationships. I am still close with everyone but I can not say the same about everyone else. We have all known each other for 25 years and it makes me sad and anxious that when we come out corona it won't\nbe the same. Specifically, two of my besties are arguing with each other over a piece of sensitive gossip that was shared outside our group. Someone feels betrayed and I want to help them both without taking sides.",
+    "dialog": [
+        {
+            "text": "Hello! How are you today?",
+            "speaker": "usr",
+            "knowledge": "[xReact] happy [xIntent] none [xWant] to get some rest [xNeed] none [xEffect] none"
+        },
+        {
+            "text": "Hello, what seems to be on your mind?",
+            "speaker": "sys",
+            "strategy": "Question",
+            "heal": "[resp] to get your mind off of the idea of negative thinking or suicide thoughts. [str] fuck, fuuuuuuuuuuuuuuuuuuck, fuckkk, fuuuuuuuuck, gt [aff] Joyful"
+        },
+        {
+            "text": "Friends and our relationships amongst one another. Two are arguing and I want to help both. We only can facetime each other because of Corona and it is taking a toll among our group.",
+            "speaker": "usr",
+            "knowledge": "[xReact] happy [xIntent] none [xWant] to be a good friend [xNeed] none [xEffect] none"
+        },
+        {
+            "text": "I see. How long have your two friends been arguing?",
+            "speaker": "sys",
+            "strategy": "Question",
+            "heal": "[resp] Hang in there, my friend! [str] weekend, competition, model, role, nsfw [aff] Joyful"
+        },
+        {
+            "text": "It has been around 4 months now. It started slowly and now has ramped up to where it's exploding and causing discourse among us all. One of my friends told a secret to another acquaintance outside of our group.",
+            "speaker": "usr",
+            "knowledge": "[xReact] happy [xIntent] to be secretive [xWant] to tell more people [xNeed] to be friends with me [xEffect] none"
+        },
+        {
+            "text": "My friend is raging over this which she should. trust was broken.",
+            "speaker": "usr",
+            "knowledge": "[xReact] upset [xIntent] none [xWant] to be forgiven [xNeed] none [xEffect] none"
+        },
+        {
+            "text": "It sounds like tempers are all running pretty hot for everyone right now, is that correct?",
+            "speaker": "sys",
+            "strategy": "Restatement or Paraphrasing",
+            "heal": "[resp] To live. [str] kids, children, child, kid, baby [aff] Angry"
+        },
+        {
+            "text": "I believe in forgiveness, and the friend that told is very remorseful How do I help them?",
+            "speaker": "usr",
+            "knowledge": "[xReact] happy [xIntent] to be nice [xWant] to be forgiven [xNeed] to have a reason [xEffect] is forgiven"
+        },
+        {
+            "text": "Well, it sounds like you are in a tough spot since both your friends are so mad at each other.",
+            "speaker": "sys",
+            "strategy": "Reflection of feelings",
+            "heal": "[resp] You deserve to be forgiven, and to forgive yourself too [str] learn, loving, deserve, love, learning [aff] Ashamed"
+        },
+        {
+            "text": "Why do you think your one friends shared a secret they were supposed to keep?",
+            "speaker": "sys",
+            "strategy": "Question",
+            "heal": "[resp] You deserve to be forgiven, and to forgive yourself too [str] learn, loving, deserve, love, learning [aff] Ashamed"
+        },
+        {
+            "text": "The acquaintance knew something of the secret because she had experienced this before. I think my friend was more-so trying to help my other friend, not betray her.",
+            "speaker": "usr",
+            "knowledge": "[xReact] happy [xIntent] to be helpful [xWant] to help [xNeed] none [xEffect] none"
+        },
+        {
+            "text": "She went outside the group but not for spitrful reasons i think.",
+            "speaker": "usr",
+            "knowledge": "[xReact] sad [xIntent] to be alone [xWant] to be alone [xNeed] none [xEffect] none"
+        },
+        {
+            "text": "I think I understand. Sometimes we accidentally hurt the people we love when we are trying to help.",
+            "speaker": "sys",
+            "strategy": "Reflection of feelings",
+            "heal": "[resp] I love being alone but hate being lonely. [str] commit, killing, death, painless, option [aff] Devastated"
+        },
+        {
+            "text": "I want one friend to know that the other was trying to hel and nothurt, but did not think clearly when deciding where to get help from.",
+            "speaker": "usr",
+            "knowledge": "[xReact] confused [xIntent] none [xWant] to get help [xNeed] none [xEffect] none"
+        },
+        {
+            "text": "How do I make her understand this?",
+            "speaker": "usr",
+            "knowledge": "[xReact] happy [xIntent] to be understood [xWant] to explain [xNeed] to talk to her [xEffect] none"
+        },
+        {
+            "text": "I think it is great that you want to actively help, it says a lot about you.",
+            "speaker": "sys",
+            "strategy": "Affirmation and Reassurance",
+            "heal": "[resp] Someone to talk to. [str] describes, song, happened, conceptual, elevates [aff] Caring"
+        },
+        {
+            "text": "Thanks! What should I say to her?",
+            "speaker": "usr",
+            "knowledge": "[xReact] sad [xIntent] to be heard [xWant] to get her to understand [xNeed] none [xEffect] none"
+        },
+        {
+            "text": "I think you should give her some time and space to reflect. It is important to give her time and space so she can better understand your feelings.",
+            "speaker": "sys",
+            "strategy": "Affirmation and Reassurance",
+            "heal": ""
+        }
+    ]
+}
