@@ -21,6 +21,23 @@ class MyModule(L.LightningModule):
         self.tokenizer = tokenizer
         self.model = model
         self.model.tie_tokenizer(self.tokenizer)
+        
+        if Config.CHECKPOINT_PATH:
+            print(f"Loading checkpoint from {Config.CHECKPOINT_PATH}")
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            checkpoint = torch.load(Config.CHECKPOINT_PATH, map_location=device)
+
+            if isinstance(checkpoint, dict):
+                if "state_dict" in checkpoint:
+                    state_dict = checkpoint["state_dict"]
+                    print("Detected PyTorch Lightning checkpoint.")
+                else:
+                    state_dict = checkpoint
+                    print("Detected standard PyTorch checkpoint.")
+            else:
+                raise ValueError("Unsupported checkpoint format.")
+
+            self.model.load_state_dict(state_dict, strict=False)
 
         self.save_hyperparameters(ignore=["model"])
 
@@ -42,9 +59,15 @@ class MyModule(L.LightningModule):
         else:
             labels[:, 0] = -100
             logits = logits[..., : self.tokenizer.vocab_size].contiguous()
+            
+        logits_cpu = logits.detach().cpu()
+        labels_cpu = labels.detach().cpu()
+        ppl_value, _ = get_ppl_value(logits_cpu, labels_cpu)
 
-        ppl_value, _ = get_ppl_value(logits, labels)
         self.metrics[phase].append(ppl_value)
+
+        del batch, labels, logits, outputs, logits_cpu, labels_cpu
+        torch.cuda.empty_cache()
 
         return loss
 
